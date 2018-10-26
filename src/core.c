@@ -49,9 +49,9 @@ int core_load_bitcode(lua_State *L)
    // creating the module
    LLVMModuleRef module;
    if (!LLVMParseBitcode2(memory_buffer, &module)) {
+      LLVMDisposeMemoryBuffer(memory_buffer);
       lua_pushnil(L);
       lua_pushfstring(L, "[LLVM] could not create module");
-      LLVMDisposeMemoryBuffer(memory_buffer);
       return 2;
    }
    LLVMDisposeMemoryBuffer(memory_buffer);
@@ -66,17 +66,33 @@ int core_load_bitcode(lua_State *L)
 
 int core_load_ir(lua_State *L)
 {
-   LLVMContextRef ctx =
-      *(LLVMContextRef *) luaL_checkudata(L, 1, LUALLVM_CONTEXT);
-   LLVMMemoryBufferRef membuf =
-      *(LLVMMemoryBufferRef *) luaL_checkudata(L, 2, LUALLVM_MEMBUF);
-   LLVMModuleRef *mod = luaL_checkudata(L, 3, LUALLVM_MODULE);
-   char *errmsg;
-   if (LLVMParseIRInContext(ctx, membuf, mod, &errmsg) != 0) {
+   const char *path = luaL_checkstring(L, 1);
+
+   // creating the context
+   LLVMContextRef ctx = LLVMContextCreate();
+
+   // creating the memory buffer
+   LLVMMemoryBufferRef memory_buffer;
+   if (!LLVMCreateMemoryBufferWithContentsOfFile(path, &memory_buffer, &err)) {
       lua_pushnil(L);
-      lua_pushfstring(L, "[LLVM] %s", errmsg);
+      lua_pushfstring(L, "[LLVM] %s", err);
       return 2;
    }
-   lua_pushboolean(L, 1);
+
+   // creating the module
+   LLVMModuleRef module;
+   if (!LLVMParseIRInContext(ctx, memory_buffer, module, &err)) {
+      LLVMDisposeMemoryBuffer(memory_buffer);
+      lua_pushnil(L);
+      lua_pushfstring(L, "[LLVM] %s", err);
+      return 2;
+   }
+   LLVMDisposeMemoryBuffer(memory_buffer);
+
+   // creating the user data for the module
+   LLVMModuleRef *lua_module = lua_newuserdata(L, sizeof(LLVMModuleRef));
+   *lua_module = module;
+   luaL_setmetatable(L, LUALLVM_MODULE);
+
    return 1;
 }
