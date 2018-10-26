@@ -18,10 +18,11 @@
  * along with lua-llvm-binding. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <lauxlib.h>
+#include <lua.h>
+
 #include <llvm-c/Core.h>
 #include <llvm-c/IRReader.h>
-#include <lua.h>
-#include <lauxlib.h>
 
 #include "luallvm.h"
 #include "core.h"
@@ -32,31 +33,38 @@ int coreobj(lua_State *L)
    return 1;
 }
 
-int core_newmod(lua_State *L)
+int core_load_bitcode(lua_State *L)
 {
-   const char *name = luaL_checkstring(L, 1);
-   int hasctx = lua_isnoneornil(L, 2);
-   LLVMModuleRef *module = lua_newuserdata(L, sizeof(LLVMModuleRef));
-   luaL_setmetatable(L, LUALLVM_MODULE);
-   if (hasctx) {
-      LLVMContextRef ctx =
-         *(LLVMContextRef *) luaL_checkudata(L, 2, LUALLVM_CONTEXT);
-      *module = LLVMModuleCreateWithNameInContext(name, ctx);
-   } else {
-      *module = LLVMModuleCreateWithName(name);
+   const char *path = luaL_checkstring(L, 1);
+
+   // reading the file from path
+   LLVMMemoryBufferRef memory_buffer;
+   const char *err;
+   if (!LLVMCreateMemoryBufferWithContentsOfFile(path, &memory_buffer, &err)) {
+      lua_pushnil(L);
+      lua_pushfstring(L, "[LLVM] %s", err);
+      return 2;
    }
+
+   // creating the module
+   LLVMModuleRef module;
+   if (!LLVMParseBitcode2(memory_buffer, &module)) {
+      lua_pushnil(L);
+      lua_pushfstring(L, "[LLVM] could not create module");
+      LLVMDisposeMemoryBuffer(memory_buffer);
+      return 2;
+   }
+   LLVMDisposeMemoryBuffer(memory_buffer);
+
+   // creating the user data for the module
+   LLVMModuleRef *lua_module = lua_newuserdata(L, sizeof(LLVMModuleRef));
+   *lua_module = module;
+   luaL_setmetatable(L, LUALLVM_MODULE);
+
    return 1;
 }
 
-int core_newctx(lua_State *L)
-{
-   LLVMContextRef *p = lua_newuserdata(L, sizeof(LLVMContextRef));
-   luaL_setmetatable(L, LUALLVM_CONTEXT);
-   *p = LLVMContextCreate();
-   return 1;
-}
-
-int core_parseIR(lua_State *L)
+int core_load_ir(lua_State *L)
 {
    LLVMContextRef ctx =
       *(LLVMContextRef *) luaL_checkudata(L, 1, LUALLVM_CONTEXT);
