@@ -18,13 +18,40 @@
  * along with lua-llvm-binding. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _LUALLVM_CORE_H
-#define _LUALLVM_CORE_H
+#include <lauxlib.h>
 
-extern int core_load_ir(lua_State*);
-extern int core_load_bitcode(lua_State*);
+#include "core.h"
 
-extern int core_write_ir(lua_State*);
-extern int core_write_bitcode(lua_State*);
+// static void newclass(lua_State *L, const char *tname, const luaL_Reg *funcs) {
+//     luaL_newmetatable(L, tname);
+//     lua_pushvalue(L, -1);
+//     lua_setfield(L, -2, "__index");
+//     luaL_setfuncs(L, funcs, 0);
+//     lua_pop(L, 1);
+// }
 
-#endif
+int luaopen_llb(lua_State *L) {
+    // module
+    // TODO
+
+    // basic_block
+    // TODO
+
+    // const luaL_Reg lib_llvm[] = {
+    //     {"Core", coreobj},
+    //     {NULL, NULL}
+    // };
+    // newclass(L, LUALLVM_CORE, lib_core);
+
+    // core
+    const luaL_Reg lib_llb[] = {
+        {"load_ir", core_load_ir},
+        {"load_bitcode", core_load_bitcode},
+        {"write_ir", core_write_ir},
+        {"write_bitcode", core_write_bitcode},
+        {NULL, NULL}
+    };
+
+    luaL_newlib(L, lib_llb);
+    return 1;
+}

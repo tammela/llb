@@ -1,6 +1,6 @@
 require "tests/setup"
 
-local lib = require "llvmcore"
+local lib = require "llb"
 
 local err = {
     nonexisting_file = "No such file or directory",

@@ -18,12 +18,9 @@
  * along with lua-llvm-binding. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _LUALLVM_H
-#define _LUALLVM_H
+#ifndef _LLB_H
+#define _LLB_H
 
-#define LUALLVM_CORE ("__luallvm_core")
-#define LUALLVM_MEMBUF ("__luallvm_membuf")
-#define LUALLVM_MODULE ("__luallvm_module")
-#define LUALLVM_CONTEXT ("__luallvm_context")
+#define LLB_MODULE ("__luallvm_module")
 
 #endif

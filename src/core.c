@@ -28,13 +28,8 @@
 #include <llvm-c/Core.h>
 #include <llvm-c/IRReader.h>
 
-#include "luallvm.h"
 #include "core.h"
-
-int _core_object(lua_State *L) {
-    luaL_getmetatable(L, LUALLVM_CORE);
-    return 1;
-}
+#include "llb.h"
 
 // ==================================================
 //
@@ -73,7 +68,7 @@ int core_load_ir(lua_State *L) {
     // creating the user data for the module
     LLVMModuleRef *lua_module = lua_newuserdata(L, sizeof(LLVMModuleRef));
     *lua_module = module;
-    luaL_setmetatable(L, LUALLVM_MODULE);
+    luaL_setmetatable(L, LLB_MODULE);
 
     return 1;
 }
@@ -103,7 +98,7 @@ int core_load_bitcode(lua_State *L) {
     // creating the user data for the module
     LLVMModuleRef *lua_module = lua_newuserdata(L, sizeof(LLVMModuleRef));
     *lua_module = module;
-    luaL_setmetatable(L, LUALLVM_MODULE);
+    luaL_setmetatable(L, LLB_MODULE);
 
     return 1;
 }
@@ -127,16 +122,4 @@ int core_write_bitcode(lua_State* L) {
 
     LLVMDisposeModule(module);
     return 0;
-}
-
-int luaopen_llvmcore(lua_State *L) {
-    const struct luaL_Reg lib[] = {
-        {"load_ir", core_load_ir},
-        {"load_bitcode", core_load_bitcode},
-        {"write_ir", core_write_ir},
-        {"write_bitcode", core_write_bitcode},
-        {NULL, NULL}
-    };
-    luaL_newlib(L, lib);
-    return 1;
 }
