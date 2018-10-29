@@ -10,10 +10,11 @@ CPPFLAGS= `llvm-config --cxxflags --ldflags --system-libs \
 	--libs core bitreader bitwriter irreader`
 
 all:
-	$(CC) $(CFLAGS) -fpic -c src/core.c -o llvmcore.o
-	$(CPPC) $(CPPFLAGS) llvmcore.o -dynamiclib -o llvmcore.dylib -llua.5.3.4
+	@- $(CC) $(CFLAGS) -fpic -c src/core.c -o llvmcore.o
+	@- $(CPPC) $(CPPFLAGS) llvmcore.o -dynamiclib -o llvmcore.dylib -llua.5.3.4
 
-	lua tests/test_core.lua
+test: all
+	@- lua tests/test_core.lua
 
 clean:
 	@- rm -f *.so

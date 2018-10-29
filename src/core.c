@@ -46,6 +46,7 @@ int core_load_ir(lua_State *L) {
     const char *path = luaL_checkstring(L, 1);
     char *err;
 
+    // FIXME: dispose of ctx after creating the module?
     // creating the context
     LLVMContextRef ctx = LLVMContextCreate();
 
@@ -60,7 +61,8 @@ int core_load_ir(lua_State *L) {
     // creating the module
     LLVMModuleRef module;
     if (LLVMParseIRInContext(ctx, memory_buffer, &module, &err)) {
-        LLVMDisposeMemoryBuffer(memory_buffer); // FIXME
+        // FIXME: this is causing an error
+        // LLVMDisposeMemoryBuffer(memory_buffer);
         lua_pushnil(L);
         lua_pushfstring(L, "[LLVM] %s", err);
         return 2;
@@ -78,10 +80,10 @@ int core_load_ir(lua_State *L) {
 
 int core_load_bitcode(lua_State *L) {
     const char *path = luaL_checkstring(L, 1);
+    char *err;
 
     // reading the file from path
     LLVMMemoryBufferRef memory_buffer;
-    char *err;
     if (LLVMCreateMemoryBufferWithContentsOfFile(path, &memory_buffer, &err)) {
         lua_pushnil(L);
         lua_pushfstring(L, "[LLVM] %s", err);
@@ -90,10 +92,10 @@ int core_load_bitcode(lua_State *L) {
 
     // creating the module
     LLVMModuleRef module;
-    if (LLVMParseBitcode2(memory_buffer, &module)) {
+    if (LLVMParseBitcode(memory_buffer, &module, &err)) {
         LLVMDisposeMemoryBuffer(memory_buffer);
         lua_pushnil(L);
-        lua_pushfstring(L, "[LLVM] could not create module");
+        lua_pushfstring(L, "[LLVM] %s", err);
         return 2;
     }
     LLVMDisposeMemoryBuffer(memory_buffer);
@@ -112,17 +114,18 @@ int core_write_ir(lua_State* L) {
 }
 
 int core_write_bitcode(lua_State* L) {
-    LLVMModuleRef *module = lua_touserdata(L, 1);
+    // FIXME: not checking if the argument is of the correct type
+    LLVMModuleRef module = *(LLVMModuleRef*)lua_touserdata(L, 1);
     const char *path = luaL_checkstring(L, 2);
 
     // writing the module to the output file
-    if (LLVMWriteBitcodeToFile(*module, path)) {
+    if (LLVMWriteBitcodeToFile(module, path)) {
         lua_pushnil(L);
         lua_pushfstring(L, "[LLVM] could write bitcode to the output file");
         return 2;
     }
 
-    LLVMDisposeModule(*module);
+    LLVMDisposeModule(module);
     return 0;
 }
 
