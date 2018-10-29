@@ -11,8 +11,7 @@ CPPFLAGS= `llvm-config --cxxflags --ldflags --system-libs \
 
 all:
 	@- $(CC) $(CFLAGS) -fpic -c src/llb.c -o llb.o
-	@- $(CC) $(CFLAGS) -fpic -c src/core.c -o core.o
-	@- $(CPPC) $(CPPFLAGS) llb.o core.o -dynamiclib -o llb.dylib -llua
+	@- $(CPPC) $(CPPFLAGS) llb.o -dynamiclib -o llb.dylib -llua
 
 test: all
 	@- lua tests/test_core.lua

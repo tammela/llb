@@ -19,8 +19,14 @@
  */
 
 #include <lauxlib.h>
+#include <lua.h>
 
-#include "core.h"
+#include <llvm-c/BitReader.h>
+#include <llvm-c/BitWriter.h>
+#include <llvm-c/Core.h>
+#include <llvm-c/IRReader.h>
+
+#include "llb.h"
 
 // static void newclass(lua_State *L, const char *tname, const luaL_Reg *funcs) {
 //     luaL_newmetatable(L, tname);
@@ -29,6 +35,105 @@
 //     luaL_setfuncs(L, funcs, 0);
 //     lua_pop(L, 1);
 // }
+
+// ==================================================
+//
+//  Module
+//
+// ==================================================
+
+static int llb_load_ir(lua_State *L) {
+    const char *path = luaL_checkstring(L, 1);
+    char *err;
+
+    // FIXME: dispose of ctx after creating the module?
+    // creating the context
+    LLVMContextRef ctx = LLVMContextCreate();
+
+    // creating the memory buffer
+    LLVMMemoryBufferRef memory_buffer;
+    if (LLVMCreateMemoryBufferWithContentsOfFile(path, &memory_buffer, &err)) {
+        lua_pushnil(L);
+        lua_pushfstring(L, "[LLVM] %s", err);
+        return 2;
+    }
+
+    // creating the module
+    LLVMModuleRef module;
+    if (LLVMParseIRInContext(ctx, memory_buffer, &module, &err)) {
+        // FIXME: this is causing an error
+        // LLVMDisposeMemoryBuffer(memory_buffer);
+        lua_pushnil(L);
+        lua_pushfstring(L, "[LLVM] %s", err);
+        return 2;
+    }
+    // FIXME: this is causing an error
+    // LLVMDisposeMemoryBuffer(memory_buffer);
+
+    // creating the user data for the module
+    LLVMModuleRef *lua_module = lua_newuserdata(L, sizeof(LLVMModuleRef));
+    *lua_module = module;
+    luaL_setmetatable(L, LLB_MODULE);
+
+    return 1;
+}
+
+static int llb_load_bitcode(lua_State *L) {
+    const char *path = luaL_checkstring(L, 1);
+    char *err;
+
+    // reading the file from path
+    LLVMMemoryBufferRef memory_buffer;
+    if (LLVMCreateMemoryBufferWithContentsOfFile(path, &memory_buffer, &err)) {
+        lua_pushnil(L);
+        lua_pushfstring(L, "[LLVM] %s", err);
+        return 2;
+    }
+
+    // creating the module
+    LLVMModuleRef module;
+    if (LLVMParseBitcode(memory_buffer, &module, &err)) {
+        LLVMDisposeMemoryBuffer(memory_buffer);
+        lua_pushnil(L);
+        lua_pushfstring(L, "[LLVM] %s", err);
+        return 2;
+    }
+    LLVMDisposeMemoryBuffer(memory_buffer);
+
+    // creating the user data for the module
+    LLVMModuleRef *lua_module = lua_newuserdata(L, sizeof(LLVMModuleRef));
+    *lua_module = module;
+    luaL_setmetatable(L, LLB_MODULE);
+
+    return 1;
+}
+
+static int llb_write_ir(lua_State* L) {
+    // TODO
+    return 0;
+}
+
+static int llb_write_bitcode(lua_State* L) {
+    // FIXME: not checking if the argument is of the correct type
+    LLVMModuleRef module = *(LLVMModuleRef*)lua_touserdata(L, 1);
+    const char *path = luaL_checkstring(L, 2);
+
+    // writing the module to the output file
+    if (LLVMWriteBitcodeToFile(module, path)) {
+        lua_pushnil(L);
+        lua_pushfstring(L, "[LLVM] could write bitcode to the output file");
+        return 2;
+    }
+
+    LLVMDisposeModule(module);
+    return 0;
+}
+
+// ==================================================
+//
+//  luaopen
+//
+// ==================================================
 
 int luaopen_llb(lua_State *L) {
     // module
@@ -45,10 +150,10 @@ int luaopen_llb(lua_State *L) {
 
     // core
     const luaL_Reg lib_llb[] = {
-        {"load_ir", core_load_ir},
-        {"load_bitcode", core_load_bitcode},
-        {"write_ir", core_write_ir},
-        {"write_bitcode", core_write_bitcode},
+        {"load_ir", llb_load_ir},
+        {"load_bitcode", llb_load_bitcode},
+        {"write_ir", llb_write_ir},
+        {"write_bitcode", llb_write_bitcode},
         {NULL, NULL}
     };
 
