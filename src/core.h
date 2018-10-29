@@ -21,9 +21,12 @@
 #ifndef _LUALLVM_CORE_H
 #define _LUALLVM_CORE_H
 
-int coreobj(lua_State *L);
-int core_newmod(lua_State *L);
-int core_newctx(lua_State *L);
-int core_parseIR(lua_State *L);
+extern int _core_object(lua_State*);
+
+extern int core_load_ir(lua_State*);
+extern int core_load_bitcode(lua_State*);
+
+extern int core_write_ir(lua_State*);
+extern int core_write_bitcode(lua_State*);
 
 #endif

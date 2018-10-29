@@ -18,57 +18,125 @@
  * along with lua-llvm-binding. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <stdio.h>
+
+#include <lauxlib.h>
+#include <lua.h>
+
+#include <llvm-c/BitReader.h>
+#include <llvm-c/BitWriter.h>
 #include <llvm-c/Core.h>
 #include <llvm-c/IRReader.h>
-#include <lua.h>
-#include <lauxlib.h>
 
 #include "luallvm.h"
 #include "core.h"
 
-int coreobj(lua_State *L)
-{
-   luaL_getmetatable(L, LUALLVM_CORE);
-   return 1;
+int _core_object(lua_State *L) {
+    luaL_getmetatable(L, LUALLVM_CORE);
+    return 1;
 }
 
-int core_newmod(lua_State *L)
-{
-   const char *name = luaL_checkstring(L, 1);
-   int hasctx = lua_isnoneornil(L, 2);
-   LLVMModuleRef *module = lua_newuserdata(L, sizeof(LLVMModuleRef));
-   luaL_setmetatable(L, LUALLVM_MODULE);
-   if (hasctx) {
-      LLVMContextRef ctx =
-         *(LLVMContextRef *) luaL_checkudata(L, 2, LUALLVM_CONTEXT);
-      *module = LLVMModuleCreateWithNameInContext(name, ctx);
-   } else {
-      *module = LLVMModuleCreateWithName(name);
-   }
-   return 1;
+// ==================================================
+//
+//  Module
+//
+// ==================================================
+
+int core_load_ir(lua_State *L) {
+    const char *path = luaL_checkstring(L, 1);
+    char *err;
+
+    // FIXME: dispose of ctx after creating the module?
+    // creating the context
+    LLVMContextRef ctx = LLVMContextCreate();
+
+    // creating the memory buffer
+    LLVMMemoryBufferRef memory_buffer;
+    if (LLVMCreateMemoryBufferWithContentsOfFile(path, &memory_buffer, &err)) {
+        lua_pushnil(L);
+        lua_pushfstring(L, "[LLVM] %s", err);
+        return 2;
+    }
+
+    // creating the module
+    LLVMModuleRef module;
+    if (LLVMParseIRInContext(ctx, memory_buffer, &module, &err)) {
+        // FIXME: this is causing an error
+        // LLVMDisposeMemoryBuffer(memory_buffer);
+        lua_pushnil(L);
+        lua_pushfstring(L, "[LLVM] %s", err);
+        return 2;
+    }
+    // FIXME: this is causing an error
+    // LLVMDisposeMemoryBuffer(memory_buffer);
+
+    // creating the user data for the module
+    LLVMModuleRef *lua_module = lua_newuserdata(L, sizeof(LLVMModuleRef));
+    *lua_module = module;
+    luaL_setmetatable(L, LUALLVM_MODULE);
+
+    return 1;
 }
 
-int core_newctx(lua_State *L)
-{
-   LLVMContextRef *p = lua_newuserdata(L, sizeof(LLVMContextRef));
-   luaL_setmetatable(L, LUALLVM_CONTEXT);
-   *p = LLVMContextCreate();
-   return 1;
+int core_load_bitcode(lua_State *L) {
+    const char *path = luaL_checkstring(L, 1);
+    char *err;
+
+    // reading the file from path
+    LLVMMemoryBufferRef memory_buffer;
+    if (LLVMCreateMemoryBufferWithContentsOfFile(path, &memory_buffer, &err)) {
+        lua_pushnil(L);
+        lua_pushfstring(L, "[LLVM] %s", err);
+        return 2;
+    }
+
+    // creating the module
+    LLVMModuleRef module;
+    if (LLVMParseBitcode(memory_buffer, &module, &err)) {
+        LLVMDisposeMemoryBuffer(memory_buffer);
+        lua_pushnil(L);
+        lua_pushfstring(L, "[LLVM] %s", err);
+        return 2;
+    }
+    LLVMDisposeMemoryBuffer(memory_buffer);
+
+    // creating the user data for the module
+    LLVMModuleRef *lua_module = lua_newuserdata(L, sizeof(LLVMModuleRef));
+    *lua_module = module;
+    luaL_setmetatable(L, LUALLVM_MODULE);
+
+    return 1;
 }
 
-int core_parseIR(lua_State *L)
-{
-   LLVMContextRef ctx =
-      *(LLVMContextRef *) luaL_checkudata(L, 1, LUALLVM_CONTEXT);
-   LLVMMemoryBufferRef membuf =
-      *(LLVMMemoryBufferRef *) luaL_checkudata(L, 2, LUALLVM_MEMBUF);
-   LLVMModuleRef *mod = luaL_checkudata(L, 3, LUALLVM_MODULE);
-   char *errmsg;
-   if (LLVMParseIRInContext(ctx, membuf, mod, &errmsg) != 0) {
-      lua_pushnil(L);
-      lua_pushfstring(L, "[LLVM] %s", errmsg);
-      return 2;
-   }
-   lua_pushboolean(L, 1);
-   return 1;
+int core_write_ir(lua_State* L) {
+    // TODO
+    return 0;
+}
+
+int core_write_bitcode(lua_State* L) {
+    // FIXME: not checking if the argument is of the correct type
+    LLVMModuleRef module = *(LLVMModuleRef*)lua_touserdata(L, 1);
+    const char *path = luaL_checkstring(L, 2);
+
+    // writing the module to the output file
+    if (LLVMWriteBitcodeToFile(module, path)) {
+        lua_pushnil(L);
+        lua_pushfstring(L, "[LLVM] could write bitcode to the output file");
+        return 2;
+    }
+
+    LLVMDisposeModule(module);
+    return 0;
+}
+
+int luaopen_llvmcore(lua_State *L) {
+    const struct luaL_Reg lib[] = {
+        {"load_ir", core_load_ir},
+        {"load_bitcode", core_load_bitcode},
+        {"write_ir", core_write_ir},
+        {"write_bitcode", core_write_bitcode},
+        {NULL, NULL}
+    };
+    luaL_newlib(L, lib);
+    return 1;
 }
