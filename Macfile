@@ -6,7 +6,8 @@ CC= clang
 CPPC= clang++
 
 CFLAGS= `llvm-config --cflags` -Wall
-CPPFLAGS= `llvm-config --cxxflags --ldflags --system-libs --libs core bitreader irreader`
+CPPFLAGS= `llvm-config --cxxflags --ldflags --system-libs \
+	--libs core bitreader bitwriter irreader`
 
 all:
 	$(CC) $(CFLAGS) -fpic -c src/core.c -o llvmcore.o

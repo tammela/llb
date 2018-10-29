@@ -26,4 +26,7 @@ extern int _core_object(lua_State*);
 extern int core_load_ir(lua_State*);
 extern int core_load_bitcode(lua_State*);
 
+extern int core_write_ir(lua_State*);
+extern int core_write_bitcode(lua_State*);
+
 #endif

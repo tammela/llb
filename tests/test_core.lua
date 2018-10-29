@@ -8,4 +8,8 @@ if err then
     return
 end
 
-print(module)
+local err = core.write_bitcode(module, "bitcode.bc")
+if err then
+    print(err)
+    return
+end
