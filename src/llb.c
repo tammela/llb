@@ -148,7 +148,6 @@ int luaopen_llb(lua_State *L) {
     // };
     // newclass(L, LUALLVM_CORE, lib_core);
 
-    // core
     const luaL_Reg lib_llb[] = {
         {"load_ir", llb_load_ir},
         {"load_bitcode", llb_load_bitcode},

@@ -18,8 +18,8 @@
  * along with lua-llvm-binding. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _LUALLVM_MODULE_H
-#define _LUALLVM_MODULE_H
+#ifndef _LLB_MODULE_H
+#define _LLB_MODULE_H
 
 int module_gc(lua_State *L);
 
