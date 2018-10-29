@@ -21,6 +21,6 @@
 #ifndef _LLB_H
 #define _LLB_H
 
-#define LLB_MODULE ("__luallvm_module")
+#define LLB_MODULE ("__llb_module")
 
 #endif
