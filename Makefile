@@ -19,9 +19,7 @@
 #
 
 all:
-	cd src && $(MAKE) $@
-tests:
+	cd src && $(MAKE) $(PLAT)
 
 clean:
 	cd src && $(MAKE) $@
-

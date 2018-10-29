@@ -18,28 +18,44 @@
 # along with lua-llvm-binding. If not, see <http://www.gnu.org/licenses/>.
 #
 
+PLAT= none
+
 LUALLVM_SO= llvm.so
+LUALLVM_DYLIB= llvm.dylib
 
 # LLVM Specific
 LLVM_INCLUDEDIR= -I$(shell llvm-config --includedir)
+LLVM_CXXFLAGS= $(shell llvm-config --cxxflags)
 LLVM_LDFLAGS= $(shell llvm-config --ldflags)
 LLVM_LIBS= $(shell llvm-config --libs) $(shell llvm-config --system-libs)
 
 # Compiler settings
 CC= gcc
 CFLAGS= -O2 -fPIC -Wall -Werror -std=gnu99 $(LLVM_INCLUDEDIR)
-LDFLAGS= $(LLVM_LDFLAGS) $(LLVM_LIBS) -l:liblua.a
+LDFLAGS= $(LLVM_LDFLAGS) $(LLVM_LIBS) -llua
 
 OBJS= luallvm.o core.o membuf.o ctx.o module.o
 
-all:
+default:
+	$(PLAT)
+
+none:
+	@echo "invalid platform"
+
+macosx:
+	$(MAKE) $(LUALLVM_DYLIB)
+
+linux:
 	$(MAKE) $(LUALLVM_SO)
 
 clean:
-	$(RM) $(LUALLVM_SO) $(OBJS)
+	$(RM) $(LUALLVM_SO) $(LUALLVM_DYLIB) $(OBJS)
 
 $(LUALLVM_SO): $(OBJS)
 	$(CC) -shared -dl -Wl,-soname,$(LUALLVM_SO) -o $@ $? $(LDFLAGS)
+
+$(LUALLVM_DYLIB): $(OBJS)
+	$(CC) -dynamiclib -undefined dynamic_lookup -o $@ $? $(LDFLAGS)
 
 # binary dependencies
 luallvm.o: luallvm.c luallvm.h core.h membuf.h ctx.h module.h
