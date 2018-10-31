@@ -48,9 +48,6 @@ local tests = {{
         err = err.invalid_bc_file
     }}
 }, {
-    func = "write_ir",
-    cases = {} -- TODO
-}, {
     func = "write_bitcode",
     cases = {} -- TODO
 }}

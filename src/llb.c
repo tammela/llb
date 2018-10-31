@@ -108,11 +108,6 @@ static int llb_load_bitcode(lua_State *L) {
     return 1;
 }
 
-static int llb_write_ir(lua_State* L) {
-    // TODO
-    return 0;
-}
-
 static int llb_write_bitcode(lua_State* L) {
     // FIXME: not checking if the argument is of the correct type
     LLVMModuleRef module = *(LLVMModuleRef*)lua_touserdata(L, 1);
@@ -187,7 +182,6 @@ int luaopen_llb(lua_State *L) {
     const luaL_Reg lib_llb[] = {
         {"load_ir", llb_load_ir},
         {"load_bitcode", llb_load_bitcode},
-        {"write_ir", llb_write_ir},
         {"write_bitcode", llb_write_bitcode},
         {"load_functions", llb_load_functions},
         {NULL, NULL}
