@@ -32,7 +32,7 @@ CC= gcc
 CFLAGS= -O2 -fPIC -Wall -Werror -std=gnu99 $(LLVM_INCLUDEDIR)
 LDFLAGS= $(LLVM_LDFLAGS) $(LLVM_LIBS) -llua
 
-OBJS= llb.o module.o
+OBJS= llb.o module.o bb.o
 
 none:
 	@echo "invalid platform"
@@ -55,3 +55,4 @@ $(LLB_DYLIB): $(OBJS)
 # binary dependencies
 llb.o: llb.c llb.h module.h
 module.o: module.c module.h
+bb.o: bb.c bb.h

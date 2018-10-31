@@ -23,13 +23,8 @@
 
 #include <llvm-c/Core.h>
 
+#include "bb.h"
 #include "llb.h"
-
-#define newuserdata(L, type, value, tname) { \
-    type *ptr = lua_newuserdata(L, sizeof(type)); \
-    *ptr = value; \
-    luaL_setmetatable(L, tname); \
-} \
 
 static void module_load_functions(lua_State*, LLVMModuleRef);
 
@@ -48,21 +43,19 @@ static void module_load_functions(lua_State*, LLVMModuleRef);
 // }
 
 void module_new(lua_State *L, LLVMModuleRef module) {
-    // creating the lua table for the module
+    // module = {}
     lua_newtable(L);
-
-    // creating the user data for the module
+    // userdata = newuserdata(module)
     newuserdata(L, LLVMModuleRef, module, LLB_MODULE);
-
-    // module.userdata = lua_module
+    // module.userdata = userdata
     lua_setfield(L, -2, "userdata");
-
+    // functions = load_functions(module)
     module_load_functions(L, module);
-
-    // module.functions = {function_name: {bb_name: bb_userdata}}
+    // module.functions = functions
     lua_setfield(L, -2, "functions");    
 }
 
+// functions = {function_name: {bb_name: bb_userdata}}
 static void module_load_functions(lua_State* L, LLVMModuleRef module) {
     // functions = {}
     lua_newtable(L);
@@ -84,8 +77,9 @@ static void module_load_functions(lua_State* L, LLVMModuleRef module) {
         for (LLVMBasicBlockRef bb = LLVMGetFirstBasicBlock(function);
                 bb != NULL;
                 bb = LLVMGetNextBasicBlock(bb)) {
-            // basic_blocks[basic_block_name] = basic_block_userdata
-            newuserdata(L, LLVMBasicBlockRef, bb, LLB_BASIC_BLOCK);
+            // basic_block = new(bb)
+            bb_new(L, bb);
+            // basic_blocks[basic_block_name] = basic_block
             lua_setfield(L, -2, LLVMGetValueName(LLVMBasicBlockAsValue(bb)));
         }
 

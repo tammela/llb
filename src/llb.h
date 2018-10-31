@@ -21,6 +21,12 @@
 #ifndef _LLB_H
 #define _LLB_H
 
+#define newuserdata(L, type, value, tname) { \
+    type *ptr = lua_newuserdata(L, sizeof(type)); \
+    *ptr = value; \
+    luaL_setmetatable(L, tname); \
+} \
+
 #define LLB_MODULE ("__llb_module")
 #define LLB_BASIC_BLOCK ("__llb_basic_block")
 
