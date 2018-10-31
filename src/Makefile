@@ -18,8 +18,6 @@
 # along with lua-llvm-binding. If not, see <http://www.gnu.org/licenses/>.
 #
 
-PLAT= none
-
 LLB_SO= llb.so
 LLB_DYLIB= llb.dylib
 
@@ -35,9 +33,6 @@ CFLAGS= -O2 -fPIC -Wall -Werror -std=gnu99 $(LLVM_INCLUDEDIR)
 LDFLAGS= $(LLVM_LDFLAGS) $(LLVM_LIBS) -llua
 
 OBJS= llb.o module.o
-
-default:
-	$(PLAT)
 
 none:
 	@echo "invalid platform"
@@ -58,5 +53,5 @@ $(LLB_DYLIB): $(OBJS)
 	$(CC) -dynamiclib -undefined dynamic_lookup -o $@ $? $(LDFLAGS)
 
 # binary dependencies
-llb.o: llb.c llb.h
+llb.o: llb.c llb.h module.h
 module.o: module.c module.h

@@ -18,8 +18,14 @@
 # along with lua-llvm-binding. If not, see <http://www.gnu.org/licenses/>.
 #
 
-all:
-	cd src && $(MAKE) $(PLAT)
+none:
+	@echo "invalid platform"
+
+linux:
+	cd src && $(MAKE) linux
+
+macosx:
+	cd src && $(MAKE) macosx
 
 # FIXME
 test: all
