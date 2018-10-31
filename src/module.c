@@ -56,7 +56,7 @@ void module_new(lua_State *L, LLVMModuleRef module) {
 }
 
 // functions = {function_name: {bb_name: bb_userdata}}
-static void module_load_functions(lua_State* L, LLVMModuleRef module) {
+static void module_load_functions(lua_State *L, LLVMModuleRef module) {
     // functions = {}
     lua_newtable(L);
 

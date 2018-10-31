@@ -101,7 +101,7 @@ static int llb_load_bitcode(lua_State *L) {
     return 1;
 }
 
-static int llb_write_bitcode(lua_State* L) {
+static int llb_write_bitcode(lua_State *L) {
     // FIXME: not checking if the argument is of the correct type
     LLVMModuleRef module = *(LLVMModuleRef*)lua_touserdata(L, 1);
     const char *path = luaL_checkstring(L, 2);
