@@ -22,13 +22,13 @@
 #include <lua.h>
 #include <lauxlib.h>
 
-#include "luallvm.h"
+#include "llb.h"
 #include "module.h"
 
 int module_gc(lua_State *L)
 {
    LLVMModuleRef p =
-      *(LLVMModuleRef *) luaL_checkudata(L, 1, LUALLVM_MODULE);
+      *(LLVMModuleRef *) luaL_checkudata(L, 1, LLB_MODULE);
    LLVMDisposeModule(p);
    return 0;
 }

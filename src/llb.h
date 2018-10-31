@@ -18,17 +18,9 @@
  * along with lua-llvm-binding. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <llvm-c/Core.h>
-#include <lua.h>
-#include <lauxlib.h>
+#ifndef _LLB_H
+#define _LLB_H
 
-#include "luallvm.h"
-#include "ctx.h"
+#define LLB_MODULE ("__llb_module")
 
-int ctx_gc(lua_State *L)
-{
-   LLVMContextRef p =
-      *(LLVMContextRef *) luaL_checkudata(L, 1, LUALLVM_CONTEXT);
-   LLVMContextDispose(p);
-   return 0;
-}
+#endif

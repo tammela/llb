@@ -1,0 +1,22 @@
+# 
+# Macfile, got it?
+# 
+
+CC= clang
+CPPC= clang++
+
+CFLAGS= `llvm-config --cflags` -Wall
+CPPFLAGS= `llvm-config --cxxflags --ldflags --system-libs \
+	--libs core bitreader bitwriter irreader`
+
+all:
+	@- $(CC) $(CFLAGS) -fpic -c src/llb.c -o llb.o
+	@- $(CPPC) $(CPPFLAGS) llb.o -dynamiclib -o llb.dylib -llua
+
+test: all
+	@- lua tests/test_core.lua
+
+clean:
+	@- rm -f *.so
+	@- rm -f *.o
+	@- rm -f *.dylib
