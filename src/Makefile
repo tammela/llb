@@ -20,8 +20,8 @@
 
 PLAT= none
 
-LUALLVM_SO= llvm.so
-LUALLVM_DYLIB= llvm.dylib
+LLB_SO= llb.so
+LLB_DYLIB= llb.dylib
 
 # LLVM Specific
 LLVM_INCLUDEDIR= -I$(shell llvm-config --includedir)
@@ -43,20 +43,20 @@ none:
 	@echo "invalid platform"
 
 macosx:
-	$(MAKE) $(LUALLVM_DYLIB)
+	$(MAKE) $(LLB_DYLIB)
 
 linux:
-	$(MAKE) $(LUALLVM_SO)
+	$(MAKE) $(LLB_SO)
 
 clean:
-	$(RM) $(LUALLVM_SO) $(LUALLVM_DYLIB) $(OBJS)
+	$(RM) $(LLB_SO) $(LLB_DYLIB) $(OBJS)
 
 $(LLB_SO): $(OBJS)
 	$(CC) -shared -dl -Wl,-soname,$(LLB_SO) -o $@ $? $(LDFLAGS)
 
-$(LUALLVM_DYLIB): $(OBJS)
+$(LLB_DYLIB): $(OBJS)
 	$(CC) -dynamiclib -undefined dynamic_lookup -o $@ $? $(LDFLAGS)
 
 # binary dependencies
-luallvm.o: llb.c llb.h
+llb.o: llb.c llb.h
 module.o: module.c llb.h
