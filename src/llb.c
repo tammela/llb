@@ -129,6 +129,41 @@ static int llb_write_bitcode(lua_State* L) {
     return 0;
 }
 
+static int llb_load_functions(lua_State* L) {
+    // get module from Lua stack
+    LLVMModuleRef module = *(LLVMModuleRef*)lua_touserdata(L, 1);
+
+    // create the functions table
+    lua_newtable(L);
+    for (LLVMValueRef function = LLVMGetFirstFunction(module);
+            function != NULL;
+            function = LLVMGetNextFunction(function)) {
+        unsigned bbs_count = LLVMCountBasicBlocks(function);
+
+        // skip functions without basic blocks
+        if (bbs_count == 0) {
+            continue;
+        }
+
+        // get function name to use as key
+        const char* f_name = LLVMGetValueName(function);
+
+        lua_newtable(L);
+        for (LLVMBasicBlockRef bb = LLVMGetFirstBasicBlock(function);
+                bb != NULL;
+                bb = LLVMGetNextBasicBlock(bb)) {
+            const char* bb_name = LLVMGetValueName(LLVMBasicBlockAsValue(bb));
+            LLVMBasicBlockRef *lua_bb = lua_newuserdata(L, sizeof(LLVMBasicBlockRef));
+            *lua_bb = bb;
+            lua_setfield(L, -2, bb_name);
+        }
+        lua_setfield(L, -2, f_name);
+    }
+
+    return 1;
+}
+
+
 // ==================================================
 //
 //  luaopen
@@ -148,11 +183,13 @@ int luaopen_llb(lua_State *L) {
     // };
     // newclass(L, LUALLVM_CORE, lib_core);
 
+    // core
     const luaL_Reg lib_llb[] = {
         {"load_ir", llb_load_ir},
         {"load_bitcode", llb_load_bitcode},
         {"write_ir", llb_write_ir},
         {"write_bitcode", llb_write_bitcode},
+        {"load_functions", llb_load_functions},
         {NULL, NULL}
     };
 
