@@ -21,5 +21,10 @@
 all:
 	cd src && $(MAKE) $(PLAT)
 
+# FIXME
+test: all
+	mv src/llb.dylib tests/llb.dylib
+	cd tests && lua test_llb.lua && lua test_module.lua
+
 clean:
 	cd src && $(MAKE) $@

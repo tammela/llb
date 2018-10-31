@@ -27,6 +27,7 @@
 #include <llvm-c/IRReader.h>
 
 #include "llb.h"
+#include "module.h"
 
 // static void newclass(lua_State *L, const char *tname, const luaL_Reg *funcs) {
 //     luaL_newmetatable(L, tname);
@@ -70,11 +71,7 @@ static int llb_load_ir(lua_State *L) {
     // FIXME: this is causing an error
     // LLVMDisposeMemoryBuffer(memory_buffer);
 
-    // creating the user data for the module
-    LLVMModuleRef *lua_module = lua_newuserdata(L, sizeof(LLVMModuleRef));
-    *lua_module = module;
-    luaL_setmetatable(L, LLB_MODULE);
-
+    module_new(L, module);
     return 1;
 }
 
@@ -100,11 +97,7 @@ static int llb_load_bitcode(lua_State *L) {
     }
     LLVMDisposeMemoryBuffer(memory_buffer);
 
-    // creating the user data for the module
-    LLVMModuleRef *lua_module = lua_newuserdata(L, sizeof(LLVMModuleRef));
-    *lua_module = module;
-    luaL_setmetatable(L, LLB_MODULE);
-
+    module_new(L, module);
     return 1;
 }
 
@@ -124,41 +117,6 @@ static int llb_write_bitcode(lua_State* L) {
     return 0;
 }
 
-static int llb_load_functions(lua_State* L) {
-    // get module from Lua stack
-    LLVMModuleRef module = *(LLVMModuleRef*)lua_touserdata(L, 1);
-
-    // create the functions table
-    lua_newtable(L);
-    for (LLVMValueRef function = LLVMGetFirstFunction(module);
-            function != NULL;
-            function = LLVMGetNextFunction(function)) {
-        unsigned bbs_count = LLVMCountBasicBlocks(function);
-
-        // skip functions without basic blocks
-        if (bbs_count == 0) {
-            continue;
-        }
-
-        // get function name to use as key
-        const char* f_name = LLVMGetValueName(function);
-
-        lua_newtable(L);
-        for (LLVMBasicBlockRef bb = LLVMGetFirstBasicBlock(function);
-                bb != NULL;
-                bb = LLVMGetNextBasicBlock(bb)) {
-            const char* bb_name = LLVMGetValueName(LLVMBasicBlockAsValue(bb));
-            LLVMBasicBlockRef *lua_bb = lua_newuserdata(L, sizeof(LLVMBasicBlockRef));
-            *lua_bb = bb;
-            lua_setfield(L, -2, bb_name);
-        }
-        lua_setfield(L, -2, f_name);
-    }
-
-    return 1;
-}
-
-
 // ==================================================
 //
 //  luaopen
@@ -166,26 +124,15 @@ static int llb_load_functions(lua_State* L) {
 // ==================================================
 
 int luaopen_llb(lua_State *L) {
-    // module
-    // TODO
-
-    // basic_block
-    // TODO
-
-    // const luaL_Reg lib_llvm[] = {
-    //     {"Core", coreobj},
-    //     {NULL, NULL}
-    // };
-    // newclass(L, LUALLVM_CORE, lib_core);
-
     // core
     const luaL_Reg lib_llb[] = {
         {"load_ir", llb_load_ir},
         {"load_bitcode", llb_load_bitcode},
         {"write_bitcode", llb_write_bitcode},
-        {"load_functions", llb_load_functions},
         {NULL, NULL}
     };
+
+    // FIXME: register LLB_MODULE, LLB_BASIC_BLOCK and other mts for userdata
 
     luaL_newlib(L, lib_llb);
     return 1;

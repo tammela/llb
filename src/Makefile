@@ -59,4 +59,4 @@ $(LLB_DYLIB): $(OBJS)
 
 # binary dependencies
 llb.o: llb.c llb.h
-module.o: module.c llb.h
+module.o: module.c module.h

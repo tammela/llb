@@ -1,10 +1,10 @@
-require "tests/setup"
+require "setup"
 
 local lib = require "llb"
 
 local err = {
     nonexisting_file = "No such file or directory",
-    invalid_ir_file = "tests/aux/invalid.ll:1:1: error: " ..
+    invalid_ir_file = "aux/invalid.ll:1:1: error: " ..
         "expected top-level entity\ninvalid_ir\n^\n",
     invalid_bc_file = "Invalid bitcode signature"
 
@@ -15,9 +15,9 @@ local tests = {{
     func = "load_ir",
     cases = {{
         name = "ok",
-        arguments = {"tests/aux/sum.ll"},
+        arguments = {"aux/sum.ll"},
         res = function(got)
-            return type(got) == "userdata", "userdata", type(got)
+            return type(got) == "table", "a table", type(got)
         end,
         err = nil
     }, {
@@ -26,16 +26,16 @@ local tests = {{
         err = err.nonexisting_file
     }, {
         name = "invalid file",
-        arguments = {"tests/aux/invalid.ll"},
+        arguments = {"aux/invalid.ll"},
         err = err.invalid_ir_file
     }}
 }, {
     func = "load_bitcode",
     cases = {{
         name = "ok",
-        arguments = {"tests/aux/sum.bc"},
+        arguments = {"aux/sum.bc"},
         res = function(got)
-            return type(got) == "userdata", "an userdata", type(got)
+            return type(got) == "table", "a table", type(got)
         end,
         err = nil
     }, {
@@ -44,7 +44,7 @@ local tests = {{
         err = err.nonexisting_file
     }, {
         name = "invalid file",
-        arguments = {"tests/aux/invalid.bc"},
+        arguments = {"aux/invalid.bc"},
         err = err.invalid_bc_file
     }}
 }, {

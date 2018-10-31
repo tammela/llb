@@ -22,5 +22,6 @@
 #define _LLB_H
 
 #define LLB_MODULE ("__llb_module")
+#define LLB_BASIC_BLOCK ("__llb_basic_block")
 
 #endif
