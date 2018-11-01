@@ -4,8 +4,8 @@ function successors_predecessors(basic_blocks)
         local successors = {}
         for _, label in ipairs(basic_block.successors) do
             local successor = assert(basic_blocks[label])
-            table.insert(successors, successor)
-            table.insert(successor.predecessors, basic_block)
+            successors[successor.label] = true
+            successor.predecessors[basic_block.label] = true
         end
         basic_block.successors = successors
     end
