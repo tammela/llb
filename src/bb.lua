@@ -1,32 +1,54 @@
 
-function successors(bbs, bb, labels)
-    bb.successors = {}
-    for _, label in ipairs(labels) do
-        local found = false
-        for _, block in pairs(bbs) do
-            if label == block.label then
-                found = true
-                table.insert(bb.successors, block)
-            end
+function successors_predecessors(basic_blocks)
+    for _, basic_block in pairs(basic_blocks) do
+        local successors = {}
+        for _, label in ipairs(basic_block.successors) do
+            local successor = assert(basic_blocks[label])
+            table.insert(successors, successor)
+            table.insert(successor.predecessors, basic_block)
         end
-        assert(found)
+        basic_block.successors = successors
     end
 end
 
-local bbs = {
-    {
-        label = "entry"
-    }, {
-        label = "l1"
-    }, {
-        label = "l2"
-    }, {
-        label = "l3"
-    }
-}
+-- local basic_blocks = {
+--     entry = {
+--         label = "entry",
+--         predecessors = {},
+--         successors = {"l1", "l2"}
+--     },
+--     l1 = {
+--         label = "l1",
+--         predecessors = {},
+--         successors = {"l3"}
+--     },
+--     l2 = {
+--         label = "l2",
+--         predecessors = {},
+--         successors = {"l3"}
+--     },
+--     l3 = {
+--         label = "l3",
+--         predecessors = {},
+--         successors = {}
+--     }
+-- }
 
-successors(bbs, bbs[1], {"l1", "l2"})
+-- successors_predecessors(basic_blocks)
 
-for i, v in ipairs(bbs[1].successors) do
-    print(i, v.label)
-end
+-- for _, basic_block in pairs(basic_blocks) do
+--     io.write(basic_block.label)
+--     io.write("\n")
+
+--     io.write("\t-- successors [")
+--     for _, successor in ipairs(basic_block.successors) do
+--         io.write(successor.label .. ", ")
+--     end
+--     io.write("]\n")
+
+--     io.write("\t-- predecessors [")
+--     for _, predecessor in ipairs(basic_block.predecessors) do
+--         io.write(predecessor.label .. ", ")
+--     end
+--     io.write("]\n")
+-- end

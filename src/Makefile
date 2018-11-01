@@ -53,6 +53,6 @@ $(LLB_DYLIB): $(OBJS)
 	$(CC) -dynamiclib -undefined dynamic_lookup -o $@ $? $(LDFLAGS)
 
 # binary dependencies
-llb.o: llb.c llb.h module.h
+llb.o: llb.c llb.h
 module.o: module.c module.h
 bb.o: bb.c bb.h

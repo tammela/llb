@@ -25,7 +25,7 @@
 
 #include "llb.h"
 
-void bb_new(lua_State *L, LLVMBasicBlockRef basic_block) {
+int bb_new(lua_State *L, LLVMBasicBlockRef basic_block) {
     // bb = {}
     lua_newtable(L);
     // bb.label = name(basic_block)
@@ -35,7 +35,9 @@ void bb_new(lua_State *L, LLVMBasicBlockRef basic_block) {
     newuserdata(L, LLVMBasicBlockRef, basic_block, LLB_BASIC_BLOCK);
     // bb.userdata = userdata
     lua_setfield(L, -2, "userdata");
-    // bb.predecessors = nil
+    // bb.predecessors = {}
+    lua_newtable(L);
+    lua_setfield(L, -2, "predecessors");
     // successors = {}
     lua_newtable(L);
     const char* block_label;
@@ -48,51 +50,5 @@ void bb_new(lua_State *L, LLVMBasicBlockRef basic_block) {
     }
     // bb.successors = successors
     lua_setfield(L, -2, "successors");
+    return 1;
 }
-
-// BBs bbs_successors_predecessors(LLVMValueRef function) {
-//     size_t bbs_count = LLVMCountBasicBlocks(function);
-//     assert(bbs_count != 0);
-
-//     // initializes the array of basic blocks
-//     BBs bbs = bbs_new(bbs_count);
-
-//     { // loops each block, and sets the block in the array of blocks
-//         size_t i = 0;
-//         LLVMBasicBlockRef bb = LLVMGetFirstBasicBlock(function);
-//         while (bb) {
-//             bbs->array[i++] = bb_new(bb);
-//             bb = LLVMGetNextBasicBlock(bb);
-//         }
-//     }
-
-//     // sets the successors for each block
-//     for (int i = 0; i < (int)bbs->size; i++) {
-//         BB bb = bbs->array[i];
-
-//         // gets the terminator instruction for the current block
-//         LLVMValueRef terminator = LLVMGetBasicBlockTerminator(bb->llvm);
-//         assert(terminator);
-
-//         // sets the successors for the current basic block
-//         int num_successors = LLVMGetNumSuccessors(terminator);
-//         for (int j = 0; j < num_successors; j++) {
-//             const char* name = LLVMGetBasicBlockName(
-//                 LLVMGetSuccessor(terminator, j)
-//             );
-//             set_add(bb->successors, (SetValue)bbs_find(bbs, name));
-//         }
-//     }
-
-//     // sets the predecessors for each block
-//     for (int i = 0; i < (int)bbs->size; i++) {
-//         BB bb = bbs->array[i];
-//         for (SetIterator* iterator = set_iterator(bb->successors); iterator;) {
-//             BB successor = (BB)set_iterator_value(iterator);
-//             set_add(successor->predecessors, (SetValue)bb);
-//             iterator = set_iterator_next(iterator);
-//         }
-//     }
-
-//     return bbs;
-// }

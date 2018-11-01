@@ -28,9 +28,13 @@ macosx:
 	cd src && $(MAKE) macosx
 
 # FIXME
-test: all
+test: macosx
 	mv src/llb.dylib tests/llb.dylib
-	cd tests && lua test_llb.lua && lua test_module.lua
+	cp src/bb.lua tests/bb.lua
+	cd tests && lua test_llb.lua
+	cd tests && lua test_module.lua
+	rm -f tests/bb.lua
+	rm -f tests/llb.dylib
 
 clean:
 	cd src && $(MAKE) $@

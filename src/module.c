@@ -18,6 +18,7 @@
  * along with lua-llvm-binding. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <assert.h>
 #include <lua.h>
 #include <lauxlib.h>
 
@@ -82,6 +83,14 @@ static void module_load_functions(lua_State *L, LLVMModuleRef module) {
             // basic_blocks[basic_block_name] = basic_block
             lua_setfield(L, -2, LLVMGetValueName(LLVMBasicBlockAsValue(bb)));
         }
+
+        // FIXME: will `successors_predecessors` be visible externelly?
+        // FIXME: is it possible to statically pack this into the lib?
+        // successors_predecessors(basic_blocks)
+        assert(!luaL_dofile(L, "bb.lua"));
+        lua_getglobal(L, "successors_predecessors");
+        lua_pushvalue(L, -2);
+        lua_call(L, 1, 0);
 
         // functions[function_name] = basic_blocks
         lua_setfield(L, -2, function_name);

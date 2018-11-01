@@ -18,7 +18,9 @@ for function_name, basic_blocks in pairs(m.functions) do
         assert(type(basic_block) == "table")
         assert(type(basic_block.label) == "string")
         assert(type(basic_block.userdata) == "userdata")
-        assert(basic_block.predecessors == nil)
+        assert(type(basic_block.predecessors) == "table")
+        assert(#basic_block.predecessors <= 2)
         assert(type(basic_block.successors) == "table")
+        assert(#basic_block.successors <= 2)
     end
 end
