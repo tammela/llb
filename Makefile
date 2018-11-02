@@ -22,10 +22,10 @@ none:
 	@echo "invalid platform"
 
 linux:
-	cd src && $(MAKE) linux
+	cd src && $(MAKE) $@
 
 macosx:
-	cd src && $(MAKE) macosx
+	cd src && $(MAKE) $@
 
 # FIXME
 test: macosx
