@@ -19,7 +19,7 @@
 #
 
 LLB_SO= llb.so
-LLB_DYLIB= llb.dylib
+LLB_DYLIB= llb.so
 
 # LLVM Specific
 LLVM_INCLUDEDIR= -I$(shell llvm-config --includedir)
