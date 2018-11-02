@@ -1,1 +1,0 @@
-- Em casos de error, retornar nil, curated_error, llvm_error
