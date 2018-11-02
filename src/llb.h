@@ -21,13 +21,26 @@
 #ifndef _LLB_H
 #define _LLB_H
 
-#define newuserdata(L, type, value, tname) { \
-    type *ptr = lua_newuserdata(L, sizeof(type)); \
+// ==================================================
+//
+//  creates a new userdata and set it's mt to tname.
+//  leaves the userdata on the stack.
+//
+// ==================================================
+
+#define newuserdata(L, value, tname) do { \
+    typeof(value) *ptr = lua_newuserdata(L, sizeof(typeof(value))); \
     *ptr = value; \
     luaL_setmetatable(L, tname); \
-} \
+} while (0)
+
+// ==================================================
+//
+//  metatables registry keys.
+//
+// ==================================================
 
 #define LLB_MODULE ("__llb_module")
-#define LLB_BASIC_BLOCK ("__llb_basic_block")
+#define LLB_BASICBLOCK ("__llb_basicblock")
 
 #endif

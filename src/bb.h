@@ -21,11 +21,6 @@
 #ifndef _LLB_BB_H
 #define _LLB_BB_H
 
-#include <lua.h>
-
-#include <llvm-c/Core.h>
-
-// creates the lua table for the basic_block and pushes it to the stack
 extern void bb_new(lua_State*, LLVMBasicBlockRef);
 
 #endif

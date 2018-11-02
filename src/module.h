@@ -21,11 +21,7 @@
 #ifndef _LLB_MODULE_H
 #define _LLB_MODULE_H
 
-#include <lua.h>
-
-#include <llvm-c/Core.h>
-
-// creates the lua table for the module and pushes it to the stack
-extern void module_new(lua_State*, LLVMModuleRef);
+extern int module_new(lua_State*, LLVMModuleRef);
+extern int module_gc(lua_State*);
 
 #endif

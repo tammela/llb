@@ -27,72 +27,13 @@
 #include "bb.h"
 #include "llb.h"
 
-static void module_load_functions(lua_State*, LLVMModuleRef);
-
-// static void newobject(lua_State *L, const char *tname, const luaL_Reg *funcs) {
-//     luaL_newmetatable(L, tname);
-//     lua_pushvalue(L, -1);
-//     lua_setfield(L, -2, "__index");
-//     luaL_setfuncs(L, funcs, 0);
-//     lua_pop(L, 1);
-// }
-
-// int module_gc(lua_State *L) {
-//     LLVMModuleRef module = *(LLVMModuleRef*)luaL_checkudata(L, 1, LLB_MODULE);
-//     LLVMDisposeModule(module);
-//     return 0;
-// }
-
-void module_new(lua_State *L, LLVMModuleRef module) {
-    // module = {}
-    lua_newtable(L);
-    // userdata = newuserdata(module)
-    newuserdata(L, LLVMModuleRef, module, LLB_MODULE);
-    // module.userdata = userdata
-    lua_setfield(L, -2, "userdata");
-    // functions = load_functions(module)
-    module_load_functions(L, module);
-    // module.functions = functions
-    lua_setfield(L, -2, "functions");    
+int module_gc(lua_State* L) {
+     LLVMModuleRef module = *(LLVMModuleRef*)luaL_checkudata(L, 1, LLB_MODULE);
+     LLVMDisposeModule(module);
+     return 0;
 }
 
-// functions = {function_name: {bb_name: bb_userdata}}
-static void module_load_functions(lua_State *L, LLVMModuleRef module) {
-    // functions = {}
-    lua_newtable(L);
-
-    for (LLVMValueRef function = LLVMGetFirstFunction(module);
-            function != NULL;
-            function = LLVMGetNextFunction(function)) {
-        // skiping functions without basic blocks
-        if (LLVMCountBasicBlocks(function) == 0) {
-            continue;
-        }
-
-        // getting the function's name to use as key
-        const char* function_name = LLVMGetValueName(function);
-
-        // basic_blocks = {}
-        lua_newtable(L);
-
-        for (LLVMBasicBlockRef bb = LLVMGetFirstBasicBlock(function);
-                bb != NULL;
-                bb = LLVMGetNextBasicBlock(bb)) {
-            // basic_block = new(bb)
-            bb_new(L, bb);
-            // basic_blocks[basic_block_name] = basic_block
-            lua_setfield(L, -2, LLVMGetValueName(LLVMBasicBlockAsValue(bb)));
-        }
-
-        // FIXME: will `successors_predecessors` be visible externelly?
-        // FIXME: is it possible to statically pack this into the lib?
-        // successors_predecessors(basic_blocks)
-        assert(!luaL_dofile(L, "bb.lua"));
-        lua_getglobal(L, "successors_predecessors");
-        lua_pushvalue(L, -2);
-        lua_call(L, 1, 0);
-
-        // functions[function_name] = basic_blocks
-        lua_setfield(L, -2, function_name);
-    }
+int module_new(lua_State *L, LLVMModuleRef module) {
+    newuserdata(L, module, LLB_MODULE);
+    return 1;
 }

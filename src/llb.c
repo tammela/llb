@@ -29,26 +29,23 @@
 #include "llb.h"
 #include "module.h"
 
-// static void newclass(lua_State *L, const char *tname, const luaL_Reg *funcs) {
-//     luaL_newmetatable(L, tname);
-//     lua_pushvalue(L, -1);
-//     lua_setfield(L, -2, "__index");
-//     luaL_setfuncs(L, funcs, 0);
-//     lua_pop(L, 1);
-// }
+static void newclass(lua_State *L, const char *tname, const luaL_Reg *funcs) {
+    luaL_newmetatable(L, tname);
+    lua_pushvalue(L, -1);
+    lua_setfield(L, -2, "__index");
+    luaL_setfuncs(L, funcs, 0);
+    lua_pop(L, 1);
+}
 
 // ==================================================
 //
-//  Module
+//  creates a llvm module from a .ll file
 //
 // ==================================================
 
 static int llb_load_ir(lua_State *L) {
     const char *path = luaL_checkstring(L, 1);
     char *err;
-
-    // FIXME: dispose of ctx after creating the module?
-    // creating the context
     LLVMContextRef ctx = LLVMContextCreate();
 
     // creating the memory buffer
@@ -68,11 +65,9 @@ static int llb_load_ir(lua_State *L) {
         lua_pushfstring(L, "[LLVM] %s", err);
         return 2;
     }
-    // FIXME: this is causing an error
     // LLVMDisposeMemoryBuffer(memory_buffer);
 
-    module_new(L, module);
-    return 1;
+    return module_new(L, module);
 }
 
 static int llb_load_bitcode(lua_State *L) {
@@ -97,23 +92,19 @@ static int llb_load_bitcode(lua_State *L) {
     }
     LLVMDisposeMemoryBuffer(memory_buffer);
 
-    module_new(L, module);
-    return 1;
+   return  module_new(L, module);
 }
 
 static int llb_write_bitcode(lua_State *L) {
-    // FIXME: not checking if the argument is of the correct type
-    LLVMModuleRef module = *(LLVMModuleRef*)lua_touserdata(L, 1);
+    LLVMModuleRef module = *(LLVMModuleRef*)luaL_checkudata(L, 1, LLB_MODULE);
     const char *path = luaL_checkstring(L, 2);
 
-    // writing the module to the output file
     if (LLVMWriteBitcodeToFile(module, path)) {
         lua_pushnil(L);
         lua_pushfstring(L, "[LLVM] could write bitcode to the output file");
         return 2;
     }
 
-    LLVMDisposeModule(module);
     return 0;
 }
 
@@ -123,8 +114,7 @@ static int llb_write_bitcode(lua_State *L) {
 //
 // ==================================================
 
-int luaopen_llb(lua_State *L) {
-    // core
+int luaopen_llb(lua_State* L) {
     const luaL_Reg lib_llb[] = {
         {"load_ir", llb_load_ir},
         {"load_bitcode", llb_load_bitcode},
@@ -132,7 +122,17 @@ int luaopen_llb(lua_State *L) {
         {NULL, NULL}
     };
 
-    // FIXME: register LLB_MODULE, LLB_BASIC_BLOCK and other mts for userdata
+    const struct luaL_Reg module_mt[] = {
+        {"__gc", module_gc},
+        {NULL, NULL}
+    };
+
+    const struct luaL_Reg bb_mt[] = {
+        {NULL, NULL}
+    };
+
+    newclass(L, LLB_MODULE, module_mt);
+    newclass(L, LLB_BASICBLOCK, bb_mt);
 
     luaL_newlib(L, lib_llb);
     return 1;
