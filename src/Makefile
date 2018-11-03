@@ -18,8 +18,8 @@
 # along with lua-llvm-binding. If not, see <http://www.gnu.org/licenses/>.
 #
 
-LLB_SO= llb.so
-LLB_DYLIB= llb.so
+LLB_SO= llbcore.so
+LLB_DYLIB= llbcore.dylib
 
 # LLVM Specific
 LLVM_INCLUDEDIR= -I$(shell llvm-config --includedir)
@@ -32,7 +32,7 @@ CC= gcc
 CFLAGS= -O2 -fPIC -Wall -Werror -std=gnu99 $(LLVM_INCLUDEDIR)
 LDFLAGS= $(LLVM_LDFLAGS) $(LLVM_LIBS) -llua
 
-OBJS= llb.o module.o bb.o
+OBJS= bb.o function.o llbcore.o module.o
 
 none:
 	@echo "invalid platform"
@@ -53,6 +53,7 @@ $(LLB_DYLIB): $(OBJS)
 	$(CC) -dynamiclib -undefined dynamic_lookup -o $@ $? $(LDFLAGS)
 
 # binary dependencies
-llb.o: llb.c llb.h
-module.o: module.c module.h
-bb.o: bb.c bb.h
+bb.o: bb.c llbcore.h bb.h
+function.o: function.c llbcore.h bb.h function.h
+llbcore.o: llbcore.c llbcore.h module.h bb.h function.h
+module.o: module.c bb.h llbcore.h
