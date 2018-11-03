@@ -23,9 +23,16 @@
 
 #include <llvm-c/Core.h>
 
-#include "llb.h"
+#include "llbcore.h"
+#include "bb.h"
 
 int bb_new(lua_State *L, LLVMBasicBlockRef bb) {
     newuserdata(L, bb, LLB_BASICBLOCK);
+    return 1;
+}
+
+int bb_pointer(lua_State *L) {
+    LLVMBasicBlockRef bb = luaL_checkudata(L, 1, LLB_BASICBLOCK);
+    lua_pushlightuserdata(L, bb);
     return 1;
 }

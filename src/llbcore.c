@@ -26,8 +26,10 @@
 #include <llvm-c/Core.h>
 #include <llvm-c/IRReader.h>
 
-#include "llb.h"
+#include "llbcore.h"
 #include "module.h"
+#include "bb.h"
+#include "function.h"
 
 static void newclass(lua_State *L, const char *tname, const luaL_Reg *funcs) {
     luaL_newmetatable(L, tname);
@@ -114,7 +116,7 @@ static int llb_write_bitcode(lua_State *L) {
 //
 // ==================================================
 
-int luaopen_llb(lua_State* L) {
+int luaopen_llbcore(lua_State* L) {
     const luaL_Reg lib_llb[] = {
         {"load_ir", llb_load_ir},
         {"load_bitcode", llb_load_bitcode},
@@ -128,11 +130,18 @@ int luaopen_llb(lua_State* L) {
     };
 
     const struct luaL_Reg bb_mt[] = {
+        {"pointer", bb_pointer},
+        {NULL, NULL}
+    };
+
+    const struct luaL_Reg func_mt[] = {
+        {"getBBs", function_getbb},
         {NULL, NULL}
     };
 
     newclass(L, LLB_MODULE, module_mt);
     newclass(L, LLB_BASICBLOCK, bb_mt);
+    newclass(L, LLB_FUNCTION, func_mt);
 
     luaL_newlib(L, lib_llb);
     return 1;

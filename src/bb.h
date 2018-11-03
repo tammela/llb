@@ -21,6 +21,7 @@
 #ifndef _LLB_BB_H
 #define _LLB_BB_H
 
-extern void bb_new(lua_State*, LLVMBasicBlockRef);
+int bb_new(lua_State*, LLVMBasicBlockRef);
+int bb_pointer(lua_State*);
 
 #endif

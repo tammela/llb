@@ -18,29 +18,38 @@
  * along with lua-llvm-binding. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _LLB_H
-#define _LLB_H
+#include <stdlib.h>
+#include <lua.h>
+#include <lauxlib.h>
 
-// ==================================================
-//
-//  creates a new userdata and set it's mt to tname.
-//  leaves the userdata on the stack.
-//
-// ==================================================
+#include <llvm-c/Core.h>
 
-#define newuserdata(L, value, tname) do { \
-    typeof(value) *ptr = lua_newuserdata(L, sizeof(typeof(value))); \
-    *ptr = value; \
-    luaL_setmetatable(L, tname); \
-} while (0)
+#include "llbcore.h"
+#include "bb.h"
+#include "function.h"
 
-// ==================================================
-//
-//  metatables registry keys.
-//
-// ==================================================
+int function_new(lua_State* L, LLVMValueRef v) {
+    newuserdata(L, v, LLB_FUNCTION);
+    return 1;
+}
 
-#define LLB_MODULE ("__llb_module")
-#define LLB_BASICBLOCK ("__llb_basicblock")
+int function_getbb(lua_State* L) {
+    LLVMValueRef f = luaL_checkudata(L, 1, LLB_FUNCTION);
+    unsigned sz = LLVMCountBasicBlocks(f);
 
-#endif
+    lua_newtable(L);
+    if (sz == 0)
+        return 1;
+
+    LLVMBasicBlockRef *bbs = calloc(sz, sizeof(LLVMBasicBlockRef));
+    if (bbs == NULL)
+        return luaL_error(L, "%s: out of memory\n", __func__);
+
+    LLVMGetBasicBlocks(f, bbs);
+    for (int i = 0; i < sz; i++) {
+        bb_new(L, bbs[i]);
+        lua_seti(L, -2, i + 1);
+    }
+
+    return 1;
+}

@@ -18,22 +18,10 @@
  * along with lua-llvm-binding. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <assert.h>
-#include <lua.h>
-#include <lauxlib.h>
+#ifndef _LLB_FUNCTION_H
+#define _LLB_FUNCTION_H
 
-#include <llvm-c/Core.h>
+int function_new(lua_State*, LLVMValueRef);
+int function_getbb(lua_State*);
 
-#include "bb.h"
-#include "llbcore.h"
-
-int module_gc(lua_State* L) {
-     LLVMModuleRef module = *(LLVMModuleRef*)luaL_checkudata(L, 1, LLB_MODULE);
-     LLVMDisposeModule(module);
-     return 0;
-}
-
-int module_new(lua_State *L, LLVMModuleRef module) {
-    newuserdata(L, module, LLB_MODULE);
-    return 1;
-}
+#endif

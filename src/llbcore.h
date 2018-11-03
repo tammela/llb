@@ -18,22 +18,30 @@
  * along with lua-llvm-binding. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <assert.h>
-#include <lua.h>
-#include <lauxlib.h>
+#ifndef _LLB_H
+#define _LLB_H
 
-#include <llvm-c/Core.h>
+// ==================================================
+//
+//  creates a new userdata and set it's mt to tname.
+//  leaves the userdata on the stack.
+//
+// ==================================================
 
-#include "bb.h"
-#include "llbcore.h"
+#define newuserdata(L, value, tname) do { \
+    typeof(value) *ptr = lua_newuserdata(L, sizeof(typeof(value))); \
+    *ptr = value; \
+    luaL_setmetatable(L, tname); \
+} while (0)
 
-int module_gc(lua_State* L) {
-     LLVMModuleRef module = *(LLVMModuleRef*)luaL_checkudata(L, 1, LLB_MODULE);
-     LLVMDisposeModule(module);
-     return 0;
-}
+// ==================================================
+//
+//  metatable registry keys.
+//
+// ==================================================
 
-int module_new(lua_State *L, LLVMModuleRef module) {
-    newuserdata(L, module, LLB_MODULE);
-    return 1;
-}
+#define LLB_MODULE ("__llb_module")
+#define LLB_BASICBLOCK ("__llb_basicblock")
+#define LLB_FUNCTION ("__llb_function")
+
+#endif
