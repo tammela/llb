@@ -24,41 +24,41 @@ local CFG = {}
 -- calculates all predecessors and sucessors of a function
 --
 local function calcps(f)
-   local bbref = f:getBBs()
-   local BBs = {}
-   local auxmap = {}
+    local bbref = f:getBBs()
+    local BBs = {}
+    local auxmap = {}
 
-   for i = 1, #bbref do
-      local ref = bbref[i]
-      BB[i] = {ref = ref, succs = {}, preds = {}}
-      auxmap[ref:pointer()] = BB[i]
-   end
+    for i = 1, #bbref do
+       local ref = bbref[i]
+       BBs[i] = {ref = ref, succs = {}, preds = {}}
+       auxmap[ref:pointer()] = BBs[i]
+    end
 
-   for _, bb in ipairs(BB) do
-      local succs = BB.ref:succs()
-      for _, succ in ipairs(succs) do
-         local S = auxmap[succ]
-         table.insert(BB.succs, S)
-         table.insert(S.preds, BB)
-      end
-   end
+    for _, bb in ipairs(BBs) do
+       local succs = bb.ref:succs()
+       for _, succ in ipairs(succs) do
+          local S = auxmap[succ]
+          table.insert(bb.succs, S)
+          table.insert(S.preds, bb)
+       end
+    end
 
-   return BBs
+    return BBs
 end
 
 --
 -- generates the CFG of a function
 --
 function CFG:fromfunc(f)
-   self.BBs = calcps(f)
-   -- TODO: generate graph
+    self.BBs = calcps(f)
+    -- TODO: generate graph
 end
 
 function CFG:new(o)
-   o = o or {}
-   setmetatable(o, self)
-   self.__index = self
-   return o
+    o = o or {}
+    setmetatable(o, self)
+    self.__index = self
+    return o
 end
 
 return CFG

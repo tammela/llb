@@ -32,7 +32,23 @@ int bb_new(lua_State *L, LLVMBasicBlockRef bb) {
 }
 
 int bb_pointer(lua_State *L) {
-    LLVMBasicBlockRef bb = luaL_checkudata(L, 1, LLB_BASICBLOCK);
+    LLVMBasicBlockRef bb =
+        *(LLVMBasicBlockRef*)luaL_checkudata(L, 1, LLB_BASICBLOCK);
     lua_pushlightuserdata(L, bb);
+    return 1;
+}
+
+int bb_succs(lua_State *L) {
+    LLVMBasicBlockRef bb =
+        *(LLVMBasicBlockRef*)luaL_checkudata(L, 1, LLB_BASICBLOCK);
+
+    LLVMValueRef terminator = LLVMGetBasicBlockTerminator(bb);
+    unsigned n_succs = LLVMGetNumSuccessors(terminator);
+    lua_newtable(L);
+    for (int i = 0; i < n_succs; i++) {
+        lua_pushlightuserdata(L, bb);
+        lua_seti(L, -2, i + 1);
+    }
+
     return 1;
 }

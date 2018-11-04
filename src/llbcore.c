@@ -133,6 +133,7 @@ int luaopen_llbcore(lua_State* L) {
 
     const struct luaL_Reg bb_mt[] = {
         {"pointer", bb_pointer},
+        {"succs", bb_succs},
         {NULL, NULL}
     };
 
