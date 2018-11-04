@@ -34,7 +34,7 @@ int function_new(lua_State* L, LLVMValueRef v) {
 }
 
 int function_getbb(lua_State* L) {
-    LLVMValueRef f = luaL_checkudata(L, 1, LLB_FUNCTION);
+    LLVMValueRef f = *(LLVMValueRef*)luaL_checkudata(L, 1, LLB_FUNCTION);
     unsigned sz = LLVMCountBasicBlocks(f);
 
     lua_newtable(L);
