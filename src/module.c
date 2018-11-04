@@ -24,16 +24,56 @@
 
 #include <llvm-c/Core.h>
 
-#include "bb.h"
 #include "llbcore.h"
-
-int module_gc(lua_State* L) {
-     LLVMModuleRef module = *(LLVMModuleRef*)luaL_checkudata(L, 1, LLB_MODULE);
-     LLVMDisposeModule(module);
-     return 0;
-}
+#include "function.h"
 
 int module_new(lua_State *L, LLVMModuleRef module) {
     newuserdata(L, module, LLB_MODULE);
+    return 1;
+}
+
+int module_gc(lua_State* L) {
+    LLVMModuleRef module = *(LLVMModuleRef*)luaL_checkudata(L, 1, LLB_MODULE);
+    LLVMDisposeModule(module);
+    return 0;
+}
+
+static int module_iter(lua_State* L) {
+    LLVMModuleRef module = *(LLVMModuleRef*)luaL_checkudata(L, 1, LLB_MODULE);
+    if (lua_isnil(L, 2)) {
+        LLVMValueRef f = LLVMGetFirstFunction(module);
+        const char *fname = LLVMGetValueName(f);
+        lua_pushstring(L, fname);
+        function_new(L, f);
+    } else {
+        const char *key = luaL_checkstring(L, 2);
+        LLVMValueRef f = LLVMGetNamedFunction(module, key);
+        LLVMValueRef fnext = LLVMGetNextFunction(f);
+        if (fnext == NULL) {
+            lua_pushnil(L);
+            return 1;
+        }
+        const char *fnextname = LLVMGetValueName(fnext);
+        lua_pushstring(L, fnextname);
+        function_new(L, fnext);
+    }
+    return 2;
+}
+
+int module_pairs(lua_State* L) {
+    lua_pushcfunction(L, module_iter);
+    lua_pushvalue(L, 1);
+    lua_pushnil(L);
+    return 3;
+}
+
+int module_index(lua_State* L) {
+    LLVMModuleRef module = *(LLVMModuleRef*)luaL_checkudata(L, 1, LLB_MODULE);
+    const char *key = luaL_checkstring(L, 2);
+    LLVMValueRef f = LLVMGetNamedFunction(module, key);
+    if (f == NULL)
+        lua_pushnil(L);
+    else
+        function_new(L, f);
     return 1;
 }

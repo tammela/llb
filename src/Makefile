@@ -32,7 +32,7 @@ CC= gcc
 CFLAGS= -O2 -fPIC -Wall -Werror -std=gnu99 $(LLVM_INCLUDEDIR)
 LDFLAGS= $(LLVM_LDFLAGS) $(LLVM_LIBS) -llua
 
-OBJS= bb.o function.o llbcore.o module.o
+OBJS= function.o llbcore.o module.o bb.o
 
 none:
 	@echo "invalid platform"

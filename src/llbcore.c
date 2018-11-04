@@ -126,6 +126,8 @@ int luaopen_llbcore(lua_State* L) {
 
     const struct luaL_Reg module_mt[] = {
         {"__gc", module_gc},
+        {"__index", module_index},
+        {"__pairs", module_pairs},
         {NULL, NULL}
     };
 
