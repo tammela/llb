@@ -52,3 +52,15 @@ int bb_succs(lua_State *L) {
 
     return 1;
 }
+
+int bb_tostring(lua_State *L) {
+    LLVMBasicBlockRef bb =
+        *(LLVMBasicBlockRef*)luaL_checkudata(L, 1, LLB_BASICBLOCK);
+
+    char buff[50];
+    sprintf(buff, "%s:\t%p", LLVMGetBasicBlockName(bb), bb);
+
+    lua_pushstring(L, buff);
+
+    return 1;
+}
