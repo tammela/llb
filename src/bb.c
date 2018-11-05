@@ -46,7 +46,7 @@ int bb_succs(lua_State *L) {
     unsigned n_succs = LLVMGetNumSuccessors(terminator);
     lua_newtable(L);
     for (int i = 0; i < n_succs; i++) {
-        lua_pushlightuserdata(L, bb);
+        lua_pushlightuserdata(L, LLVMGetSuccessor(terminator, i));
         lua_seti(L, -2, i + 1);
     }
 
@@ -58,7 +58,7 @@ int bb_tostring(lua_State *L) {
         *(LLVMBasicBlockRef*)luaL_checkudata(L, 1, LLB_BASICBLOCK);
 
     char buff[50];
-    sprintf(buff, "%s:\t%p", LLVMGetBasicBlockName(bb), bb);
+    sprintf(buff, "%s", LLVMGetBasicBlockName(bb));
 
     lua_pushstring(L, buff);
 
