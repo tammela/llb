@@ -54,6 +54,26 @@ function CFG:fromfunc(f)
     -- TODO: generate graph
 end
 
+function CFG:string()
+    local l = {}
+    for _, v in pairs(self.BBs) do
+        l[#l + 1] = '{ ' .. tostring(v.ref)
+        if #v.succs ~= 0 then
+            l[#l + 1] = ' { '
+            for i = 1, #v.succs do
+                if i ~= #v.succs then
+                    l[#l + 1] = tostring(v.succs[i].ref) .. ' , '
+                else
+                    l[#l + 1] = tostring(v.succs[i].ref)
+                end
+            end
+            l[#l + 1] = ' } '
+        end
+        l[#l + 1] = ' } '
+    end
+    return table.concat(l, "")
+end
+
 function CFG:new(o)
     o = o or {}
     setmetatable(o, self)
