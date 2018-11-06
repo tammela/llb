@@ -51,17 +51,8 @@ local function remove(a, b)
     return res
 end
 
-local function tostring(s)
-    local l = {}
-    for e in pairs(s) do
-        l[#l + 1] = e
-    end
-    return "{" .. table.concat(l, ", ") .. "}"
-end
-
 set_mt.__add = union
 set_mt.__sub = remove
-set_mt.__div = intersection
---set_mt.__tostring = tostring
+set_mt.__mul = intersection
 
 return set_mt
