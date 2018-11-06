@@ -20,7 +20,7 @@
 
 local set_mt = {}
 
-function union(a, b)
+local function union(a, b)
     if getmetatable(a) ~= set_mt or getmetatable(b) ~= set_mt then
         error("attempt to 'add' a set with a non-set value", 2)
     end
@@ -31,7 +31,7 @@ function union(a, b)
     return res
 end
 
-function intersection(a, b)
+local function intersection(a, b)
     res = {}
     setmetatable(res, set_mt)
     for k in pairs(a) do
@@ -40,7 +40,7 @@ function intersection(a, b)
     return res
 end
 
-function remove(a, b)
+local function remove(a, b)
     res = {}
     setmetatable(res, set_mt)
     for k in pairs(a) do
@@ -51,17 +51,17 @@ function remove(a, b)
     return res
 end
 
-function tostring(s)
+local function tostring(s)
     local l = {}
     for e in pairs(s) do
         l[#l + 1] = e
     end
-    return "{" .. table.concat( l, ", ") .. "}"
+    return "{" .. table.concat(l, ", ") .. "}"
 end
 
 set_mt.__add = union
 set_mt.__sub = remove
 set_mt.__div = intersection
-set_mt.__tostring = tostring
+--set_mt.__tostring = tostring
 
 return set_mt
