@@ -26,8 +26,8 @@ local function union(a, b)
     end
     local res = {}
     setmetatable(res, set_mt)
-    for k in pairs(a) do res[k] = true end
-    for k in pairs(b) do res[k] = true end
+    for k in pairs(a) do res[k] = a[k] end
+    for k in pairs(b) do res[k] = b[k] end
     return res
 end
 
