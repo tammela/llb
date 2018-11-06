@@ -18,6 +18,8 @@
 -- along with lua-llvm-binding. If not, see <http://www.gnu.org/licenses/>.
 --
 
+local smt = require 'set_mt'
+
 local CFG = {}
 
 --
@@ -31,6 +33,8 @@ local function calcps(f)
     for i = 1, #bbref do
        local ref = bbref[i]
        BBs[i] = {ref = ref, succs = {}, preds = {}}
+       setmetatable(BBs[i].succs, smt)
+       setmetatable(BBs[i].preds, smt)
        auxmap[ref:pointer()] = BBs[i]
     end
 
@@ -38,8 +42,8 @@ local function calcps(f)
        local succs = bb.ref:succs()
        for _, succ in ipairs(succs) do
           local S = auxmap[succ]
-          table.insert(bb.succs, S)
-          table.insert(S.preds, bb)
+          bb.succs[S] = S
+          S.preds[bb] = bb
        end
     end
 
