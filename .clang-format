@@ -1,0 +1,21 @@
+---
+BasedOnStyle: LLVM
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+AlignAfterOpenBracket: DontAlign
+AlignEscapedNewlines: Left
+AllowShortBlocksOnASingleLine: true
+IndentCaseLabels: true
+MaxEmptyLinesToKeep: 1
+PointerAlignment: Left
+SpaceAfterCStyleCast: false
+SpaceBeforeAssignmentOperators: true
+SpaceBeforeParens: ControlStatements
+SpaceInEmptyParentheses: false
+SpacesInCStyleCastParentheses: false
+SpacesInContainerLiterals: false
+SpacesInParentheses: false
+SpacesInSquareBrackets: false
+IncludeBlocks: Preserve
+---
