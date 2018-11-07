@@ -39,6 +39,12 @@ static void newclass(lua_State *L, const char *tname, const luaL_Reg *funcs) {
     lua_pop(L, 1);
 }
 
+static int llb_error(lua_State *L, const char *err) {
+    lua_pushnil(L);
+    lua_pushfstring(L, "[LLVM] %s", err);
+    return 2;
+}
+
 // ==================================================
 //
 //  creates a llvm module from a .ll file
@@ -53,9 +59,7 @@ static int llb_load_ir(lua_State *L) {
     // creating the memory buffer
     LLVMMemoryBufferRef memory_buffer;
     if (LLVMCreateMemoryBufferWithContentsOfFile(path, &memory_buffer, &err)) {
-        lua_pushnil(L);
-        lua_pushfstring(L, "[LLVM] %s", err);
-        return 2;
+        return llb_error(L, err);
     }
 
     // creating the module
@@ -63,14 +67,18 @@ static int llb_load_ir(lua_State *L) {
     if (LLVMParseIRInContext(ctx, memory_buffer, &module, &err)) {
         // FIXME: this is causing an error
         // LLVMDisposeMemoryBuffer(memory_buffer);
-        lua_pushnil(L);
-        lua_pushfstring(L, "[LLVM] %s", err);
-        return 2;
+        return llb_error(L, err);
     }
     // LLVMDisposeMemoryBuffer(memory_buffer);
 
     return module_new(L, module);
 }
+
+// ==================================================
+//
+//  creates a llvm module from a .bc file
+//
+// ==================================================
 
 static int llb_load_bitcode(lua_State *L) {
     const char *path = luaL_checkstring(L, 1);
@@ -79,32 +87,32 @@ static int llb_load_bitcode(lua_State *L) {
     // reading the file from path
     LLVMMemoryBufferRef memory_buffer;
     if (LLVMCreateMemoryBufferWithContentsOfFile(path, &memory_buffer, &err)) {
-        lua_pushnil(L);
-        lua_pushfstring(L, "[LLVM] %s", err);
-        return 2;
+        return llb_error(L, err);
     }
 
     // creating the module
     LLVMModuleRef module;
     if (LLVMParseBitcode(memory_buffer, &module, &err)) {
         LLVMDisposeMemoryBuffer(memory_buffer);
-        lua_pushnil(L);
-        lua_pushfstring(L, "[LLVM] %s", err);
-        return 2;
+        return llb_error(L, err);
     }
     LLVMDisposeMemoryBuffer(memory_buffer);
 
-   return  module_new(L, module);
+   return module_new(L, module);
 }
+
+// ==================================================
+//
+//  writes a llvm module to a .bc file
+//
+// ==================================================
 
 static int llb_write_bitcode(lua_State *L) {
     LLVMModuleRef module = *(LLVMModuleRef*)luaL_checkudata(L, 1, LLB_MODULE);
     const char *path = luaL_checkstring(L, 2);
 
     if (LLVMWriteBitcodeToFile(module, path)) {
-        lua_pushnil(L);
-        lua_pushfstring(L, "[LLVM] could write bitcode to the output file");
-        return 2;
+        return llb_error(L, "could not write bitcode to the output file");
     }
 
     return 0;

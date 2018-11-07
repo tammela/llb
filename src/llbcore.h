@@ -28,6 +28,7 @@
 //
 // ==================================================
 
+// FIXME: are we going to use `typeof`?
 #define newuserdata(L, value, tname) do { \
     typeof(value) *ptr = lua_newuserdata(L, sizeof(typeof(value))); \
     *ptr = value; \
