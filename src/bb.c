@@ -56,11 +56,8 @@ int bb_succs(lua_State *L) {
 int bb_tostring(lua_State *L) {
     LLVMBasicBlockRef bb =
         *(LLVMBasicBlockRef*)luaL_checkudata(L, 1, LLB_BASICBLOCK);
-
-    char buff[50];
+    char buff[50]; // TODO: exact size
     sprintf(buff, "%s", LLVMGetBasicBlockName(bb));
-
     lua_pushstring(L, buff);
-
     return 1;
 }

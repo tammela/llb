@@ -18,7 +18,6 @@
  * along with lua-llvm-binding. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <assert.h>
 #include <lua.h>
 #include <lauxlib.h>
 
@@ -38,7 +37,7 @@ int module_gc(lua_State* L) {
     return 0;
 }
 
-static int module_iter(lua_State* L) {
+static int module_iterator(lua_State* L) {
     LLVMModuleRef module = *(LLVMModuleRef*)luaL_checkudata(L, 1, LLB_MODULE);
     if (lua_isnil(L, 2)) {
         LLVMValueRef f = LLVMGetFirstFunction(module);
@@ -61,7 +60,7 @@ static int module_iter(lua_State* L) {
 }
 
 int module_pairs(lua_State* L) {
-    lua_pushcfunction(L, module_iter);
+    lua_pushcfunction(L, module_iterator);
     lua_pushvalue(L, 1);
     lua_pushnil(L);
     return 3;
@@ -71,9 +70,10 @@ int module_index(lua_State* L) {
     LLVMModuleRef module = *(LLVMModuleRef*)luaL_checkudata(L, 1, LLB_MODULE);
     const char *key = luaL_checkstring(L, 2);
     LLVMValueRef f = LLVMGetNamedFunction(module, key);
-    if (f == NULL)
+    if (f == NULL) {
         lua_pushnil(L);
-    else
+    } else {
         function_new(L, f);
+    }
     return 1;
 }

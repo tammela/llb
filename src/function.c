@@ -28,28 +28,32 @@
 #include "bb.h"
 #include "function.h"
 
-int function_new(lua_State* L, LLVMValueRef v) {
-    newuserdata(L, v, LLB_FUNCTION);
+int function_new(lua_State *L, LLVMValueRef function) {
+    newuserdata(L, function, LLB_FUNCTION);
     return 1;
 }
 
-int function_getbb(lua_State* L) {
+int function_getbb(lua_State *L) {
     LLVMValueRef f = *(LLVMValueRef*)luaL_checkudata(L, 1, LLB_FUNCTION);
-    unsigned sz = LLVMCountBasicBlocks(f);
+    unsigned size = LLVMCountBasicBlocks(f);
 
     lua_newtable(L);
-    if (sz == 0)
+    if (size == 0) {
         return 1;
+    }
 
-    LLVMBasicBlockRef *bbs = calloc(sz, sizeof(LLVMBasicBlockRef));
-    if (bbs == NULL)
+    LLVMBasicBlockRef *bbs = calloc(size, sizeof(LLVMBasicBlockRef));
+    if (bbs == NULL) {
+        // TODO: make macro
         return luaL_error(L, "%s: out of memory\n", __func__);
+    }
 
     LLVMGetBasicBlocks(f, bbs);
-    for (int i = 0; i < sz; i++) {
+    for (int i = 0; i < size; i++) {
         bb_new(L, bbs[i]);
         lua_seti(L, -2, i + 1);
     }
 
+    // TODO: free(bbs);
     return 1;
 }

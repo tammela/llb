@@ -139,6 +139,11 @@ int luaopen_llbcore(lua_State* L) {
         {NULL, NULL}
     };
 
+    const struct luaL_Reg func_mt[] = {
+        {"getBBs", function_getbb},
+        {NULL, NULL}
+    };
+
     const struct luaL_Reg bb_mt[] = {
         {"pointer", bb_pointer},
         {"succs", bb_succs},
@@ -146,14 +151,9 @@ int luaopen_llbcore(lua_State* L) {
         {NULL, NULL}
     };
 
-    const struct luaL_Reg func_mt[] = {
-        {"getBBs", function_getbb},
-        {NULL, NULL}
-    };
-
     newclass(L, LLB_MODULE, module_mt);
-    newclass(L, LLB_BASICBLOCK, bb_mt);
     newclass(L, LLB_FUNCTION, func_mt);
+    newclass(L, LLB_BASICBLOCK, bb_mt);
 
     luaL_newlib(L, lib_llb);
     return 1;
