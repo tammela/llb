@@ -18,27 +18,27 @@
  * along with lua-llvm-binding. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <lua.h>
 #include <lauxlib.h>
+#include <lua.h>
 
 #include <llvm-c/Core.h>
 
-#include "llbcore.h"
 #include "bb.h"
+#include "llbcore.h"
 
-int bb_new(lua_State *L, LLVMBasicBlockRef bb) {
+int bb_new(lua_State* L, LLVMBasicBlockRef bb) {
     newuserdata(L, bb, LLB_BASICBLOCK);
     return 1;
 }
 
-int bb_pointer(lua_State *L) {
+int bb_pointer(lua_State* L) {
     LLVMBasicBlockRef bb =
         *(LLVMBasicBlockRef*)luaL_checkudata(L, 1, LLB_BASICBLOCK);
     lua_pushlightuserdata(L, bb);
     return 1;
 }
 
-int bb_succs(lua_State *L) {
+int bb_succs(lua_State* L) {
     LLVMBasicBlockRef bb =
         *(LLVMBasicBlockRef*)luaL_checkudata(L, 1, LLB_BASICBLOCK);
 
@@ -53,7 +53,7 @@ int bb_succs(lua_State *L) {
     return 1;
 }
 
-int bb_tostring(lua_State *L) {
+int bb_tostring(lua_State* L) {
     LLVMBasicBlockRef bb =
         *(LLVMBasicBlockRef*)luaL_checkudata(L, 1, LLB_BASICBLOCK);
     lua_pushstring(L, LLVMGetBasicBlockName(bb));

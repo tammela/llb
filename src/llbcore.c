@@ -26,12 +26,12 @@
 #include <llvm-c/Core.h>
 #include <llvm-c/IRReader.h>
 
-#include "llbcore.h"
-#include "module.h"
 #include "bb.h"
 #include "function.h"
+#include "llbcore.h"
+#include "module.h"
 
-static void newclass(lua_State *L, const char *tname, const luaL_Reg *funcs) {
+static void newclass(lua_State* L, const char* tname, const luaL_Reg* funcs) {
     luaL_newmetatable(L, tname);
     lua_pushvalue(L, -1);
     lua_setfield(L, -2, "__index");
@@ -39,7 +39,7 @@ static void newclass(lua_State *L, const char *tname, const luaL_Reg *funcs) {
     lua_pop(L, 1);
 }
 
-static int llb_error(lua_State *L, const char *err) {
+static int llb_error(lua_State* L, const char* err) {
     lua_pushnil(L);
     lua_pushfstring(L, "[LLVM] %s", err);
     return 2;
@@ -50,10 +50,9 @@ static int llb_error(lua_State *L, const char *err) {
 //  creates a llvm module from a .ll file
 //
 // ==================================================
-
-static int llb_load_ir(lua_State *L) {
-    const char *path = luaL_checkstring(L, 1);
-    char *err;
+static int llb_load_ir(lua_State* L) {
+    const char* path = luaL_checkstring(L, 1);
+    char* err;
     LLVMContextRef ctx = LLVMContextCreate();
 
     // creating the memory buffer
@@ -79,10 +78,9 @@ static int llb_load_ir(lua_State *L) {
 //  creates a llvm module from a .bc file
 //
 // ==================================================
-
-static int llb_load_bitcode(lua_State *L) {
-    const char *path = luaL_checkstring(L, 1);
-    char *err;
+static int llb_load_bitcode(lua_State* L) {
+    const char* path = luaL_checkstring(L, 1);
+    char* err;
 
     // reading the file from path
     LLVMMemoryBufferRef memory_buffer;
@@ -98,7 +96,7 @@ static int llb_load_bitcode(lua_State *L) {
     }
     LLVMDisposeMemoryBuffer(memory_buffer);
 
-   return module_new(L, module);
+    return module_new(L, module);
 }
 
 // ==================================================
@@ -106,10 +104,9 @@ static int llb_load_bitcode(lua_State *L) {
 //  writes a llvm module to a .bc file
 //
 // ==================================================
-
-static int llb_write_bitcode(lua_State *L) {
+static int llb_write_bitcode(lua_State* L) {
     LLVMModuleRef module = *(LLVMModuleRef*)luaL_checkudata(L, 1, LLB_MODULE);
-    const char *path = luaL_checkstring(L, 2);
+    const char* path = luaL_checkstring(L, 2);
 
     if (LLVMWriteBitcodeToFile(module, path)) {
         return llb_error(L, "could not write bitcode to the output file");
@@ -123,8 +120,8 @@ static int llb_write_bitcode(lua_State *L) {
 //  luaopen
 //
 // ==================================================
-
 int luaopen_llbcore(lua_State* L) {
+    // clang-format off
     const luaL_Reg lib_llb[] = {
         {"load_ir", llb_load_ir},
         {"load_bitcode", llb_load_bitcode},
@@ -150,6 +147,7 @@ int luaopen_llbcore(lua_State* L) {
         {"__tostring", bb_tostring},
         {NULL, NULL}
     };
+    // clang-format on
 
     newclass(L, LLB_MODULE, module_mt);
     newclass(L, LLB_FUNCTION, func_mt);

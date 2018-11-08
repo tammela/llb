@@ -18,22 +18,22 @@
  * along with lua-llvm-binding. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdlib.h>
-#include <lua.h>
 #include <lauxlib.h>
+#include <lua.h>
+#include <stdlib.h>
 
 #include <llvm-c/Core.h>
 
-#include "llbcore.h"
 #include "bb.h"
 #include "function.h"
+#include "llbcore.h"
 
-int function_new(lua_State *L, LLVMValueRef function) {
+int function_new(lua_State* L, LLVMValueRef function) {
     newuserdata(L, function, LLB_FUNCTION);
     return 1;
 }
 
-int function_getbb(lua_State *L) {
+int function_getbb(lua_State* L) {
     LLVMValueRef f = *(LLVMValueRef*)luaL_checkudata(L, 1, LLB_FUNCTION);
     unsigned size = LLVMCountBasicBlocks(f);
 
@@ -42,7 +42,7 @@ int function_getbb(lua_State *L) {
         return 1;
     }
 
-    LLVMBasicBlockRef *bbs = calloc(size, sizeof(LLVMBasicBlockRef));
+    LLVMBasicBlockRef* bbs = calloc(size, sizeof(LLVMBasicBlockRef));
     if (bbs == NULL) {
         // TODO: make macro
         return luaL_error(L, "%s: out of memory\n", __func__);

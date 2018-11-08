@@ -18,15 +18,15 @@
  * along with lua-llvm-binding. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <lua.h>
 #include <lauxlib.h>
+#include <lua.h>
 
 #include <llvm-c/Core.h>
 
-#include "llbcore.h"
 #include "function.h"
+#include "llbcore.h"
 
-int module_new(lua_State *L, LLVMModuleRef module) {
+int module_new(lua_State* L, LLVMModuleRef module) {
     newuserdata(L, module, LLB_MODULE);
     return 1;
 }
@@ -41,18 +41,18 @@ static int module_iterator(lua_State* L) {
     LLVMModuleRef module = *(LLVMModuleRef*)luaL_checkudata(L, 1, LLB_MODULE);
     if (lua_isnil(L, 2)) {
         LLVMValueRef f = LLVMGetFirstFunction(module);
-        const char *fname = LLVMGetValueName(f);
+        const char* fname = LLVMGetValueName(f);
         lua_pushstring(L, fname);
         function_new(L, f);
     } else {
-        const char *key = luaL_checkstring(L, 2);
+        const char* key = luaL_checkstring(L, 2);
         LLVMValueRef f = LLVMGetNamedFunction(module, key);
         LLVMValueRef fnext = LLVMGetNextFunction(f);
         if (fnext == NULL) {
             lua_pushnil(L);
             return 1;
         }
-        const char *fnextname = LLVMGetValueName(fnext);
+        const char* fnextname = LLVMGetValueName(fnext);
         lua_pushstring(L, fnextname);
         function_new(L, fnext);
     }
@@ -68,7 +68,7 @@ int module_pairs(lua_State* L) {
 
 int module_index(lua_State* L) {
     LLVMModuleRef module = *(LLVMModuleRef*)luaL_checkudata(L, 1, LLB_MODULE);
-    const char *key = luaL_checkstring(L, 2);
+    const char* key = luaL_checkstring(L, 2);
     LLVMValueRef f = LLVMGetNamedFunction(module, key);
     if (f == NULL) {
         lua_pushnil(L);
