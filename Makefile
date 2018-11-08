@@ -27,6 +27,9 @@ linux:
 macosx:
 	cd src && $(MAKE) $@
 
+format:
+	clang-format -i -style=file ./src/*.c ./src/*.h
+
 # FIXME
 test: macosx
 	mv src/llb.dylib tests/llb.dylib
