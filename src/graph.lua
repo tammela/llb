@@ -20,7 +20,7 @@
 
 local smt = require "set_mt"
 
-local CFG = {}
+local graph = {}
 
 --
 -- calculates all predecessors and sucessors of a function
@@ -50,15 +50,16 @@ local function calcps(f)
     return BBs
 end
 
---
--- generates the CFG of a function
---
-function CFG:fromfunc(f)
-    self.BBs = calcps(f)
-    -- TODO: generate graph
+function graph:predsucc(obj)
+    local BBs = calcps(obj)
+    if #BBs == 0 then
+       return nil, "calculation failed"
+    end
+    self.BBs = BBs
+    return true
 end
 
-function CFG:string()
+function graph.__tostring()
     local l = {}
     for _, v in pairs(self.BBs) do
         l[#l + 1] = '{ ' .. tostring(v.ref)
@@ -78,11 +79,11 @@ function CFG:string()
     return table.concat(l, "")
 end
 
-function CFG:new(o)
-    o = o or {}
-    setmetatable(o, self)
+function graph:new(obj)
+    obj = obj or {}
+    setmetatable(obj, self)
     self.__index = self
-    return o
+    return obj
 end
 
-return CFG
+return graph
