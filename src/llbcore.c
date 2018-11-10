@@ -31,12 +31,21 @@
 #include "llbcore.h"
 #include "module.h"
 
-static void newclass(lua_State* L, const char* tname, const luaL_Reg* funcs) {
-    luaL_newmetatable(L, tname);
-    lua_pushvalue(L, -1);
-    lua_setfield(L, -2, "__index");
+static int llb_newclass(lua_State* L) {
+    const char* tname = luaL_checkstring(L, 2);
+    tname = lua_pushfstring(L, "__llb_%s", tname);
+    if (lua_gettable(L, LUA_REGISTRYINDEX) == LUA_TNIL) {
+        return luaL_error(L, "unknown class");
+    }
+    luaL_Reg* funcs = lua_touserdata(L, -1);
+    lua_pushstring(L, tname);
+    lua_setfield(L, 1, "__name");
+    lua_pushvalue(L, 1);
+    lua_setfield(L, 1, "__index");
+    lua_pushvalue(L, 1);
     luaL_setfuncs(L, funcs, 0);
-    lua_pop(L, 1);
+    lua_setfield(L, LUA_REGISTRYINDEX, tname);
+    return 0;
 }
 
 static int llb_error(lua_State* L, const char* err) {
@@ -115,6 +124,27 @@ static int llb_write_bitcode(lua_State* L) {
     return 0;
 }
 
+// clang-format off
+struct luaL_Reg module_mt[] = {
+    {"__gc", module_gc},
+    {"__index", module_index},
+    {"__pairs", module_pairs},
+    {NULL, NULL}
+};
+
+struct luaL_Reg func_mt[] = {
+    {"getBBs", function_getbb},
+    {NULL, NULL}
+};
+
+struct luaL_Reg bb_mt[] = {
+    {"pointer", bb_pointer},
+    {"succs", bb_succs},
+    {"__tostring", bb_tostring},
+    {NULL, NULL}
+};
+// clang-format on
+
 // ==================================================
 //
 //  luaopen
@@ -126,32 +156,18 @@ int luaopen_llbcore(lua_State* L) {
         {"load_ir", llb_load_ir},
         {"load_bitcode", llb_load_bitcode},
         {"write_bitcode", llb_write_bitcode},
-        {NULL, NULL}
-    };
-
-    const struct luaL_Reg module_mt[] = {
-        {"__gc", module_gc},
-        {"__index", module_index},
-        {"__pairs", module_pairs},
-        {NULL, NULL}
-    };
-
-    const struct luaL_Reg func_mt[] = {
-        {"getBBs", function_getbb},
-        {NULL, NULL}
-    };
-
-    const struct luaL_Reg bb_mt[] = {
-        {"pointer", bb_pointer},
-        {"succs", bb_succs},
-        {"__tostring", bb_tostring},
+        {"newclass", llb_newclass},
         {NULL, NULL}
     };
     // clang-format on
 
-    newclass(L, LLB_MODULE, module_mt);
-    newclass(L, LLB_FUNCTION, func_mt);
-    newclass(L, LLB_BASICBLOCK, bb_mt);
+    lua_pushlightuserdata(L, module_mt);
+    lua_pushlightuserdata(L, func_mt);
+    lua_pushlightuserdata(L, bb_mt);
+
+    lua_setfield(L, LUA_REGISTRYINDEX, LLB_BASICBLOCK);
+    lua_setfield(L, LUA_REGISTRYINDEX, LLB_FUNCTION);
+    lua_setfield(L, LUA_REGISTRYINDEX, LLB_MODULE);
 
     luaL_newlib(L, lib_llb);
     return 1;
