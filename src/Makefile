@@ -47,10 +47,10 @@ clean:
 	$(RM) $(LLB_SO) $(LLB_DYLIB) $(OBJS)
 
 $(LLB_SO): $(OBJS)
-	$(CC) -shared -dl -Wl,-soname,$(LLB_SO) -o $@ $? $(LDFLAGS)
+	$(CC) -shared -dl -Wl,-soname,$(LLB_SO) -o $@ $(OBJS) $(LDFLAGS)
 
 $(LLB_DYLIB): $(OBJS)
-	$(CC) -dynamiclib -undefined dynamic_lookup -o $@ $? $(LDFLAGS)
+	$(CC) -dynamiclib -undefined dynamic_lookup -o $@ $(OBJS) $(LDFLAGS)
 
 # binary dependencies
 bb.o: bb.c llbcore.h bb.h
