@@ -39,5 +39,11 @@ test: macosx
 	rm -f tests/bb.lua
 	rm -f tests/llb.dylib
 
+# FIXME
+test_set:
+	@- cp src/set.lua tests/set.lua
+	@- cd tests && lua test_set.lua
+	@- rm -f tests/bb.lua
+
 clean:
 	cd src && $(MAKE) $@
