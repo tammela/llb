@@ -18,18 +18,12 @@
 -- along with lua-llvm-binding. If not, see <http://www.gnu.org/licenses/>.
 --
 
-local core = require"llbcore"
-local graph = require"graph"
+local core = require "llbcore"
 
 do
-    local funcmethods = {
-        graph = function (obj) return graph.new():predsucc(obj) end,
-    }
-
     core.newclass({}, "module")
-    core.newclass(funcmethods, "function")
+    core.newclass(require("function"), "function")
     core.newclass({}, "basicblock")
-
 end
 
 return core

@@ -72,6 +72,12 @@ function set:size()
     return i
 end
 
+function set:__tostring()
+    local t = {}
+    for e in pairs(self) do table.insert(t, tostring(e)) end
+    return "{" .. table.concat(t, ", ") .. "}"
+end
+
 function set.__add(a, b) -- A `union` B
     checktypes(a, b)
     local t = set.new()

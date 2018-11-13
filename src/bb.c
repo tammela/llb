@@ -38,7 +38,7 @@ int bb_pointer(lua_State* L) {
     return 1;
 }
 
-int bb_succs(lua_State* L) {
+int bb_successors(lua_State* L) {
     LLVMBasicBlockRef bb =
         *(LLVMBasicBlockRef*)luaL_checkudata(L, 1, LLB_BASICBLOCK);
 

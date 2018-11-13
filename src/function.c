@@ -33,7 +33,7 @@ int function_new(lua_State* L, LLVMValueRef function) {
     return 1;
 }
 
-int function_getbb(lua_State* L) {
+int function_basic_blocks(lua_State* L) {
     LLVMValueRef f = *(LLVMValueRef*)luaL_checkudata(L, 1, LLB_FUNCTION);
     unsigned size = LLVMCountBasicBlocks(f);
 

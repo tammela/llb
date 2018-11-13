@@ -32,18 +32,25 @@ format:
 
 # FIXME
 test: macosx
-	mv src/llb.dylib tests/llb.dylib
-	cp src/bb.lua tests/bb.lua
-	cd tests && lua test_llb.lua
-	cd tests && lua test_module.lua
-	rm -f tests/bb.lua
-	rm -f tests/llb.dylib
+	@- mv src/llbcore.dylib tests/llbcore.dylib
+	@- cp src/llb.lua       tests/llb.lua
+	@- cp src/function.lua  tests/function.lua
+	@- cp src/set.lua       tests/set.lua
+
+	@- # cd tests && lua test_llb.lua
+	@- # cd tests && lua test_module.lua
+	@- cd tests && lua test_renan.lua
+
+	@- rm -f tests/llbcore.dylib
+	@- rm -f tests/llb.lua
+	@- rm -f tests/function.lua
+	@- rm -f tests/set.lua
 
 # FIXME
 test_set:
 	@- cp src/set.lua tests/set.lua
 	@- cd tests && lua test_set.lua
-	@- rm -f tests/bb.lua
+	@- rm -f tests/set.lua
 
 clean:
 	cd src && $(MAKE) $@

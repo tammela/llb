@@ -133,13 +133,13 @@ struct luaL_Reg module_mt[] = {
 };
 
 struct luaL_Reg func_mt[] = {
-    {"getBBs", function_getbb},
+    {"basic_blocks", function_basic_blocks},
     {NULL, NULL}
 };
 
 struct luaL_Reg bb_mt[] = {
     {"pointer", bb_pointer},
-    {"succs", bb_succs},
+    {"successors", bb_successors},
     {"__tostring", bb_tostring},
     {NULL, NULL}
 };

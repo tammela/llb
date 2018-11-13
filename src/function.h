@@ -22,6 +22,6 @@
 #define _LLB_FUNCTION_H
 
 extern int function_new(lua_State*, LLVMValueRef);
-extern int function_getbb(lua_State*);
+extern int function_basic_blocks(lua_State*);
 
 #endif

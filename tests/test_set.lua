@@ -49,7 +49,7 @@ do
     assert(s:size() == 0)
 end
 
-do -- A `union` B
+do -- a + b
     do
         local a = set.new()
         local b = set.new()
@@ -83,7 +83,7 @@ do -- A `union` B
     end
 end
 
-do -- A `intersection` B
+do -- a * b
     do
         local a = set.new()
         local b = set.new()
@@ -117,7 +117,7 @@ do -- A `intersection` B
     end
 end
 
-do -- A - B
+do -- a - b
     do
         local a = set.new()
         local b = set.new()
@@ -151,6 +151,12 @@ do -- A - B
         local m = a - a
         assert(m:is_empty())
     end
+end
+
+do -- __tostring
+    local s = set.new()
+    s:add(2, 3, 4)
+    assert(tostring(s) == "{2, 3, 4}")
 end
 
 print("-- test set ok")
