@@ -4,5 +4,7 @@ local llb = require "llb"
 
 local main = assert(llb.load_ir("aux/sum.ll")["main"])
 
-local graph = main:bbgraph()
-print(graph)
+local bbgraph = main:bbgraph()
+-- print(bbgraph)
+
+main:domgraph()

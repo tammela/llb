@@ -31,8 +31,8 @@ format:
 	clang-format -i -style=file ./src/*.c ./src/*.h
 
 # FIXME
-test: macosx
-	@- mv src/llbcore.dylib tests/llbcore.dylib
+test:
+	@- # mv src/llbcore.dylib tests/llbcore.dylib
 	@- cp src/llb.lua       tests/llb.lua
 	@- cp src/function.lua  tests/function.lua
 	@- cp src/set.lua       tests/set.lua
@@ -41,7 +41,7 @@ test: macosx
 	@- # cd tests && lua test_module.lua
 	@- cd tests && lua test_renan.lua
 
-	@- rm -f tests/llbcore.dylib
+	@- # rm -f tests/llbcore.dylib
 	@- rm -f tests/llb.lua
 	@- rm -f tests/function.lua
 	@- rm -f tests/set.lua

@@ -43,10 +43,15 @@ end
 --
 -----------------------------------------------------
 
-function set.new()
+function set.new(...)
     local t = {}
     setmetatable(t, set)
+    t:add(...)
     return t
+end
+
+function set:copy()
+    return set.new() + self
 end
 
 function set:add(...)
@@ -74,11 +79,12 @@ end
 
 function set:__tostring()
     local t = {}
-    for e in pairs(self) do table.insert(t, tostring(e)) end
+    -- for e in pairs(self) do table.insert(t, tostring(e)) end
+    for e in pairs(self) do table.insert(t, tostring(e.value)) end
     return "{" .. table.concat(t, ", ") .. "}"
 end
 
-function set.__add(a, b) -- A `union` B
+function set.__add(a, b) -- a `union` b
     checktypes(a, b)
     local t = set.new()
     for e in pairs(a) do t:add(e) end
@@ -86,14 +92,14 @@ function set.__add(a, b) -- A `union` B
     return t
 end
 
-function set.__mul(a, b) -- A `intersection` B
+function set.__mul(a, b) -- a `intersection` b
     checktypes(a, b)
     local t = set.new()
     for e in pairs(a) do t:add(b[e]) end
     return t
 end
 
-function set.__sub(a, b) -- A - B
+function set.__sub(a, b) -- a - b
     checktypes(a, b)
     local t = set.new()
     for e in pairs(a) do
@@ -102,6 +108,22 @@ function set.__sub(a, b) -- A - B
         end
     end
     return t
+end
+
+function set.__eq(a, b)
+    checktypes(a, b)
+    local i = 0
+    for e in pairs(a) do
+        if not b[e] then
+            return false
+        end
+        i = i + 1
+    end
+    local j = 0
+    for _ in pairs(b) do
+        j = j + 1
+    end
+    return i == j
 end
 
 return set

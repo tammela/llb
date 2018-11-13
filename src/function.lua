@@ -34,9 +34,17 @@ local function settostring(s)
     return "{" .. table.concat(t, ", ") .. "}"
 end
 
-local function graphtostring(graph)
+local graph = {}
+
+function graph.new()
+    local t = {}
+    setmetatable(t, graph)
+    return t
+end
+
+function graph:__tostring()
     local nodes = {}
-    for _, node in ipairs(graph) do
+    for _, node in ipairs(self) do
         local t = {}
         table.insert(t, "label: " .. tostring(node.value))
         table.insert(t, "successors: " .. settostring(node.successors))    
@@ -52,11 +60,10 @@ end
 --
 -----------------------------------------------------
 
--- computes all predecessors and sucessors of a function
+-- computes the predecessors-sucessors graph of a function
 function fn:bbgraph()
     local bbs = self:basic_blocks()
-    local nodes = {}
-    setmetatable(nodes, {__tostring = graphtostring})
+    local nodes = graph.new()
     local auxmap = {}
 
     for i, bb in ipairs(bbs) do
@@ -79,9 +86,56 @@ function fn:bbgraph()
     return nodes
 end
 
--- computes the dominance graph
+
+
+local function dumptable(t)
+    for k, v in pairs(t) do print(k.value, v) end
+end
+
+
+
+
+
+function temp(all, entry)
+    local D -- set<node>
+    local T -- set<node>
+    local change = true
+    local dom = {} -- {node: set<node>}
+
+    dom[entry] = set.new(entry)
+    for e in pairs(all - set.new(entry)) do
+        dom[e] = all
+    end
+
+    repeat
+        change = false
+        for n in pairs(all - set.new(entry)) do
+            print("n = " .. tostring(n.value))
+            T = all:copy()
+            print("\tT (all) = " .. tostring(T))
+            for p in pairs(n.predecessors) do
+                print("\tp antes = " .. tostring(p.value))
+                -- T = T * dom[p]
+                print("\t\tT (T * " .. tostring(dom[p]) .. ") = " .. tostring(T))
+                print("\t\tdom[" .. tostring(p.value) .. "] = " .. tostring(dom[p]))
+                print("\tp depois = " .. tostring(p.value))
+            end
+        end 
+    until not change
+
+    print("\n")
+
+    return dom
+end
+
+-- computes the dominance graph of a function
 function fn:domgraph()
-    assert(false, "TODO")
+    local bbgraph = self:bbgraph()
+    local bbset = set.new()
+    bbset:add(table.unpack(bbgraph))
+    local dom = temp(bbset, bbgraph[1])
+
+    dumptable(dom)
 end
 
 return fn

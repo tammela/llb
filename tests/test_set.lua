@@ -20,11 +20,46 @@
 
 local set = require "set"
 
+do -- new
+    do -- empty
+        local s = set.new()
+        assert(s:is_empty())
+        assert(s:size() == 0)
+    end
+
+    do -- unit
+        local s = set.new(1)
+        assert(not s:is_empty())
+        assert(s:size() == 1)
+        assert((s * s):size() == 1)
+        assert((s + s):size() == 1)
+        assert((s - s):is_empty())
+    end
+
+    do -- many
+        local s = set.new(1, 2, 3)
+        assert(not s:is_empty())
+        assert(s:size() == 3)
+    end
+end
+
+do -- copy
+    local s = set.new(1)
+    local c = s:copy()
+    assert(c:size() == 1)
+    assert(s == c)
+
+    s:add(2)
+    assert(s:size() == 2)
+    assert(c:size() == 1)
+
+    c:add(3, 4)
+    assert(s:size() == 2)
+    assert(c:size() == 3)
+end
+
 do
-    -- new
     local s = set.new()
-    assert(s:is_empty())
-    assert(s:size() == 0)
     -- add
     s:add(1)
     assert(not s:is_empty())
@@ -115,6 +150,13 @@ do -- a * b
         local i = a * a
         assert(i:size() == 1)
     end
+
+    do -- a * {}
+        local a = set.new("a", "b", "c")
+        local empty = set.new()
+        local s = a * empty
+        assert(s == empty)
+    end
 end
 
 do -- a - b
@@ -150,6 +192,29 @@ do -- a - b
         a:add("1")
         local m = a - a
         assert(m:is_empty())
+    end
+end
+
+do -- a == b
+    do
+        local a = set.new(1)
+        local b = set.new(2)
+        assert(a ~= b)
+        b:add(1)
+        assert(a ~= b)
+        b:remove(2)
+        assert(a == b)
+    end
+
+    do
+        local a = set.new()
+        local b = set.new(1, 2, 3, 4, 6)
+        a:add(1, 2, 3, 4, 6)
+        assert(a == b)
+        a:remove(3)
+        assert(a ~= b)
+        a:add(3)
+        assert(a == b)
     end
 end
 

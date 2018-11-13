@@ -54,6 +54,6 @@ int function_basic_blocks(lua_State* L) {
         lua_seti(L, -2, i + 1);
     }
 
-    // TODO: free(bbs);
+    free(bbs);
     return 1;
 }
