@@ -33,8 +33,7 @@ create_dir:
 	@- ${MKDIR_P} $(BIN)
 
 copy_lua_files:
-	@- cp ./src/llb.lua ./bin/
-	@- cp ./src/set.lua ./bin/
+	@- cp ./src/*.lua ./bin/
 
 linux: format create_dir copy_lua_files
 	cd src && $(MAKE) $@
