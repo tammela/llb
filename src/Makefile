@@ -18,6 +18,8 @@
 # along with lua-llvm-binding. If not, see <http://www.gnu.org/licenses/>.
 #
 
+BIN= ../bin
+
 LLB_SO= llbcore.so
 LLB_DYLIB= llbcore.dylib
 
@@ -34,6 +36,8 @@ LDFLAGS= $(LLVM_LDFLAGS) $(LLVM_LIBS) -llua
 
 OBJS= function.o llbcore.o module.o bb.o
 
+.PHONY: none macosx linux clean
+
 none:
 	@echo "invalid platform"
 
@@ -47,10 +51,10 @@ clean:
 	$(RM) $(LLB_SO) $(LLB_DYLIB) $(OBJS)
 
 $(LLB_SO): $(OBJS)
-	$(CC) -shared -dl -Wl,-soname,$(LLB_SO) -o $@ $(OBJS) $(LDFLAGS)
+	$(CC) -shared -dl -Wl,-soname,$(LLB_SO) -o $(BIN)/$@ $(OBJS) $(LDFLAGS)
 
 $(LLB_DYLIB): $(OBJS)
-	$(CC) -dynamiclib -undefined dynamic_lookup -o $@ $(OBJS) $(LDFLAGS)
+	$(CC) -dynamiclib -undefined dynamic_lookup -o $(BIN)/$@ $(OBJS) $(LDFLAGS)
 
 # binary dependencies
 bb.o: bb.c llbcore.h bb.h

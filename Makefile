@@ -18,17 +18,25 @@
 # along with lua-llvm-binding. If not, see <http://www.gnu.org/licenses/>.
 #
 
+BIN= ./bin
+MKDIR_P = mkdir -p
+
+.PHONY: clean format create_dir linux macosx test test_set
+
 none:
 	@echo "invalid platform"
 
-linux:
-	cd src && $(MAKE) $@
-
-macosx:
-	cd src && $(MAKE) $@
-
 format:
 	clang-format -i -style=file ./src/*.c ./src/*.h
+
+create_dir:
+	${MKDIR_P} $(BIN)
+
+linux: format create_dir
+	cd src && $(MAKE) $@
+
+macosx: format create_dir
+	cd src && $(MAKE) $@
 
 # FIXME
 test:
@@ -53,4 +61,5 @@ test_set:
 	@- rm -f tests/set.lua
 
 clean:
+	rm -rf ./bin
 	cd src && $(MAKE) $@
