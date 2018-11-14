@@ -19,9 +19,9 @@
 #
 
 BIN= ./bin
-MKDIR_P = mkdir -p
+MKDIR_P= mkdir -p
 
-.PHONY: clean format create_dir linux macosx test test_set
+.PHONY: clean format create_dir copy_lua_files linux macosx test test_set
 
 none:
 	@echo "invalid platform"
@@ -30,35 +30,25 @@ format:
 	clang-format -i -style=file ./src/*.c ./src/*.h
 
 create_dir:
-	${MKDIR_P} $(BIN)
+	@- ${MKDIR_P} $(BIN)
 
-linux: format create_dir
+copy_lua_files:
+	@- cp ./src/llb.lua ./bin/
+	@- cp ./src/set.lua ./bin/
+
+linux: format create_dir copy_lua_files
 	cd src && $(MAKE) $@
 
-macosx: format create_dir
+macosx: format create_dir copy_lua_files
 	cd src && $(MAKE) $@
 
 # FIXME
-test:
-	@- # mv src/llbcore.dylib tests/llbcore.dylib
-	@- cp src/llb.lua       tests/llb.lua
-	@- cp src/function.lua  tests/function.lua
-	@- cp src/set.lua       tests/set.lua
-
-	@- # cd tests && lua test_llb.lua
-	@- # cd tests && lua test_module.lua
+test: copy_lua_files
 	@- cd tests && lua test_renan.lua
 
-	@- # rm -f tests/llbcore.dylib
-	@- rm -f tests/llb.lua
-	@- rm -f tests/function.lua
-	@- rm -f tests/set.lua
-
 # FIXME
-test_set:
-	@- cp src/set.lua tests/set.lua
+test_set: copy_lua_files
 	@- cd tests && lua test_set.lua
-	@- rm -f tests/set.lua
 
 clean:
 	rm -rf ./bin

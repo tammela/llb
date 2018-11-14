@@ -18,6 +18,8 @@
 -- along with lua-llvm-binding. If not, see <http://www.gnu.org/licenses/>.
 --
 
+require "setup"
+
 local set = require "set"
 
 do -- new

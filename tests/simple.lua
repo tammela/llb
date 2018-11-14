@@ -18,9 +18,11 @@
 -- along with lua-llvm-binding. If not, see <http://www.gnu.org/licenses/>.
 --
 
-local llbcore = require'llbcore'
+require "setup"
 
-local module = llbcore.load_ir('aux/sum.ll')
+local llbcore = require "llbcore"
+
+local module = llbcore.load_ir("aux/sum.ll")
 
 for k, v in pairs(module) do
    print(k, v)
