@@ -20,7 +20,7 @@
 
 require "setup"
 
-local lib = require "../bin/llbcore"
+local lib = require "llb"
 
 local err = {
     nonexisting_file = "No such file or directory",

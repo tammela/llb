@@ -20,7 +20,7 @@
 
 require "setup"
 
-local llb = require "llbcore"
+local llb = require "llb"
 
 -- FIXME: not giving errors when trying to load bad .ll files
 -- local m = llb.load_ir("aux/ir_1.ll")

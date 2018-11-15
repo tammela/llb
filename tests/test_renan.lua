@@ -20,7 +20,7 @@
 
 require "setup"
 
-local llb = require "llbcore"
+local llb = require "llb"
 
 local main = assert(llb.load_ir("aux/sum.ll")["main"])
 
