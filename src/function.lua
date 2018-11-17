@@ -62,7 +62,7 @@ function fn:bbgraph()
 
     for i, bb in ipairs(bbs) do
         nodes[i] = {
-            value = bb, -- why call this value? this is the __llb_basicblock reference
+            value = bb,
             successors = set.new(),
             predecessors = set.new()
         }
@@ -80,17 +80,13 @@ function fn:bbgraph()
     return nodes
 end
 
+-- computes the dominance graph of a function
+function fn:domgraph()
+    local bbgraph = self:bbgraph()
+    local all = set.new()
+    all:add(table.unpack(bbgraph))
+    local entry = bbgraph[1]; -- TODO is entry bb is always bbgraph[1]?
 
-
-local function dumptable(t)
-    for k, v in pairs(t) do print(k.value, v) end
-end
-
-
-
-
-
-function temp(all, entry)
     local D -- set<node>
     local T -- set<node>
     local change = true
@@ -104,18 +100,11 @@ function temp(all, entry)
     repeat
         change = false
         for n in pairs(all - set.new(entry)) do
-            -- print("n = " .. tostring(n.value))
             T = all:copy()
-            -- print("\tT (all) = " .. tostring(T))
             for p in pairs(n.predecessors) do
-                -- print("\tp antes = " .. tostring(p.value))
                 T = T * dom[p]
-                -- print("\t\tT (T * " .. tostring(dom[p]) .. ") = " .. tostring(T))
-                -- print("\t\tdom[" .. tostring(p.value) .. "] = " .. tostring(dom[p]))
-                -- print("\tp depois = " .. tostring(p.value))
             end
             D = set.new(n) + T
-            -- print("\tD = " .. tostring(D) .. " | " .. "dom[" .. tostring(n.value) .. "] = " .. tostring(dom[n]))
             if D ~= dom[n] then
                 change = true
                 dom[n] = D
@@ -123,19 +112,7 @@ function temp(all, entry)
         end
     until not change
 
-    print("\n")
-
     return dom
-end
-
--- computes the dominance graph of a function
-function fn:domgraph()
-    local bbgraph = self:bbgraph()
-    local bbset = set.new()
-    bbset:add(table.unpack(bbgraph))
-    local dom = temp(bbset, bbgraph[1])
-
-    dumptable(dom)
 end
 
 return fn
