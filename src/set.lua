@@ -79,7 +79,13 @@ end
 
 function set:__tostring()
     local t = {}
-    for e in pairs(self) do table.insert(t, tostring(e)) end
+    for e in pairs(self) do
+        if type(e) == 'table' then
+            table.insert(t, tostring(e.value or e))
+        else
+            table.insert(t, tostring(e))
+        end
+    end
     return "{" .. table.concat(t, ", ") .. "}"
 end
 

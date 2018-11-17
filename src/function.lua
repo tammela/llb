@@ -28,12 +28,6 @@ local fn = {}
 --
 -----------------------------------------------------
 
-local function settostring(s)
-    local t = {}
-    for e in pairs(s) do table.insert(t, tostring(e.value)) end
-    return "{" .. table.concat(t, ", ") .. "}"
-end
-
 local graph = {}
 
 function graph.new()
@@ -47,8 +41,8 @@ function graph:__tostring()
     for _, node in ipairs(self) do
         local t = {}
         table.insert(t, "label: " .. tostring(node.value))
-        table.insert(t, "successors: " .. settostring(node.successors))    
-        table.insert(t, "predecessors: " .. settostring(node.predecessors))
+        table.insert(t, "successors: " .. tostring(node.successors))
+        table.insert(t, "predecessors: " .. tostring(node.predecessors))
         table.insert(nodes, table.concat(t, "\n"))
     end
     return "---\n" .. table.concat(nodes, "\n---\n") .. "\n---"
@@ -68,7 +62,7 @@ function fn:bbgraph()
 
     for i, bb in ipairs(bbs) do
         nodes[i] = {
-            value = bb,
+            value = bb, -- why call this value? this is the __llb_basicblock reference
             successors = set.new(),
             predecessors = set.new()
         }
@@ -110,17 +104,23 @@ function temp(all, entry)
     repeat
         change = false
         for n in pairs(all - set.new(entry)) do
-            print("n = " .. tostring(n.value))
+            -- print("n = " .. tostring(n.value))
             T = all:copy()
-            print("\tT (all) = " .. tostring(T))
+            -- print("\tT (all) = " .. tostring(T))
             for p in pairs(n.predecessors) do
-                print("\tp antes = " .. tostring(p.value))
-                -- T = T * dom[p]
-                print("\t\tT (T * " .. tostring(dom[p]) .. ") = " .. tostring(T))
-                print("\t\tdom[" .. tostring(p.value) .. "] = " .. tostring(dom[p]))
-                print("\tp depois = " .. tostring(p.value))
+                -- print("\tp antes = " .. tostring(p.value))
+                T = T * dom[p]
+                -- print("\t\tT (T * " .. tostring(dom[p]) .. ") = " .. tostring(T))
+                -- print("\t\tdom[" .. tostring(p.value) .. "] = " .. tostring(dom[p]))
+                -- print("\tp depois = " .. tostring(p.value))
             end
-        end 
+            D = set.new(n) + T
+            -- print("\tD = " .. tostring(D) .. " | " .. "dom[" .. tostring(n.value) .. "] = " .. tostring(dom[n]))
+            if D ~= dom[n] then
+                change = true
+                dom[n] = D
+            end
+        end
     until not change
 
     print("\n")
