@@ -23,5 +23,6 @@
 
 extern int function_new(lua_State*, LLVMValueRef);
 extern int function_basic_blocks(lua_State*);
+extern int function_tostring(lua_State*);
 
 #endif

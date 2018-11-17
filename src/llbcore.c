@@ -134,6 +134,7 @@ struct luaL_Reg module_mt[] = {
 
 struct luaL_Reg func_mt[] = {
     {"basic_blocks", function_basic_blocks},
+    {"__tostring", function_tostring},
     {NULL, NULL}
 };
 
