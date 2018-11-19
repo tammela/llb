@@ -19,6 +19,7 @@
 --
 
 local set = require "set"
+local graph = require "graph"
 
 local fn = {}
 
@@ -62,7 +63,7 @@ function fn:bbgraph()
 
     for i, bb in ipairs(bbs) do
         nodes[i] = {
-            value = bb,
+            ref = bb, -- TODO ref is a better name than value in my opinion
             successors = set.new(),
             predecessors = set.new()
         }
@@ -70,7 +71,7 @@ function fn:bbgraph()
     end
 
     for _, node in ipairs(nodes) do
-        for _, s in ipairs(node.value:successors()) do
+        for _, s in ipairs(node.ref:successors()) do
             local successor = auxmap[s]
             node.successors:add(successor)
             successor.predecessors:add(node)
@@ -85,7 +86,7 @@ function fn:domgraph()
     local bbgraph = self:bbgraph()
     local all = set.new()
     all:add(table.unpack(bbgraph))
-    local entry = bbgraph[1]; -- TODO is entry bb is always bbgraph[1]?
+    local entry = bbgraph[1] -- TODO is entry bb always bbgraph[1]?
 
     local D -- set<node>
     local T -- set<node>
@@ -93,8 +94,8 @@ function fn:domgraph()
     local dom = {} -- {node: set<node>}
 
     dom[entry] = set.new(entry)
-    for e in pairs(all - set.new(entry)) do
-        dom[e] = all
+    for n in pairs(all - set.new(entry)) do
+        dom[n] = all
     end
 
     repeat
@@ -112,7 +113,39 @@ function fn:domgraph()
         end
     until not change
 
-    return dom
+    return dom, bbgraph -- necessary to idomgraph. TODO think of a better way
+end
+
+-- computes the imediate dominance graph of a function
+function fn:idomgraph()
+    local dom, bbgraph = self:domgraph() -- getting the same refs
+    local all = set.new()
+    all:add(table.unpack(bbgraph))
+
+    local entry = bbgraph[1] -- TODO is entry bb always bbgraph[1]?
+
+    local tmp = {}
+    local idom = {}
+
+    for n in pairs(all) do
+        tmp[n] = dom[n] - set.new(n)
+    end
+
+    for n in pairs(all - set.new(entry)) do
+        for s in pairs(tmp[n]) do
+            for t in pairs(tmp[n] - set.new(s)) do
+                if tmp[s]:contains(t) then
+                    tmp[n] = tmp[n] - set.new(t)
+                end
+            end
+        end
+    end
+
+    for n in pairs(all - set.new(entry)) do
+        idom[n] = tmp[n]
+    end
+
+    return idom
 end
 
 return fn

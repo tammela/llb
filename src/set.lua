@@ -77,11 +77,16 @@ function set:size()
     return i
 end
 
+function set:contains(e)
+    if self[e] ~= nil then return true end
+    return false
+end
+
 function set:__tostring()
     local t = {}
     for e in pairs(self) do
         if type(e) == 'table' then
-            table.insert(t, tostring(e.value or e))
+            table.insert(t, tostring(e.ref or e))
         else
             table.insert(t, tostring(e))
         end

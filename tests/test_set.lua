@@ -220,6 +220,14 @@ do -- a == b
     end
 end
 
+do -- a contains b
+    local a = set.new(1, 2, 3, 4, 5)
+    local b = 3
+    local c = 7
+    assert(a:contains(b) == true)
+    assert(a:contains(c) == false)
+end
+
 do -- __tostring
     local s = set.new()
     s:add(2, 3, 4)
