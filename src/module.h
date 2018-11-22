@@ -25,5 +25,6 @@ extern int module_new(lua_State*, LLVMModuleRef);
 extern int module_gc(lua_State*);
 extern int module_pairs(lua_State*);
 extern int module_index(lua_State*);
+extern int module_tostring(lua_State*);
 
 #endif

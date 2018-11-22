@@ -19,7 +19,6 @@
 --
 
 local set = require "set"
-local graph = require "graph"
 
 local fn = {}
 

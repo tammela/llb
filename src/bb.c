@@ -24,6 +24,7 @@
 #include <llvm-c/Core.h>
 
 #include "bb.h"
+#include "instruction.h"
 #include "llbcore.h"
 
 int bb_new(lua_State* L, LLVMBasicBlockRef bb) {
@@ -48,6 +49,23 @@ int bb_successors(lua_State* L) {
     for (int i = 0; i < n_succs; i++) {
         lua_pushlightuserdata(L, LLVMGetSuccessor(terminator, i));
         lua_seti(L, -2, i + 1);
+    }
+
+    return 1;
+}
+
+int bb_instructions(lua_State* L) {
+    LLVMBasicBlockRef bb =
+        *(LLVMBasicBlockRef*)luaL_checkudata(L, 1, LLB_BASICBLOCK);
+
+    lua_newtable(L);
+
+    int i = 0;
+    for (LLVMValueRef inst = LLVMGetFirstInstruction(bb); inst != NULL;
+         inst = LLVMGetNextInstruction(inst)) {
+        instruction_new(L, inst);
+        lua_seti(L, -2, i + 1);
+        i++;
     }
 
     return 1;

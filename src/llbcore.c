@@ -28,6 +28,7 @@
 
 #include "bb.h"
 #include "function.h"
+#include "instruction.h"
 #include "llbcore.h"
 #include "module.h"
 
@@ -129,6 +130,7 @@ struct luaL_Reg module_mt[] = {
     {"__gc", module_gc},
     {"__index", module_index},
     {"__pairs", module_pairs},
+    {"__tostring", module_tostring},
     {NULL, NULL}
 };
 
@@ -141,7 +143,14 @@ struct luaL_Reg func_mt[] = {
 struct luaL_Reg bb_mt[] = {
     {"pointer", bb_pointer},
     {"successors", bb_successors},
+    {"instructions", bb_instructions},
     {"__tostring", bb_tostring},
+    {NULL, NULL}
+};
+
+struct luaL_Reg inst_mt[] = {
+    {"label", instruction_label},
+    {"__tostring", instruction_tostring},
     {NULL, NULL}
 };
 // clang-format on
@@ -162,6 +171,7 @@ int luaopen_llbcore(lua_State* L) {
     };
     // clang-format on
 
+    lua_pushlightuserdata(L, inst_mt);
     lua_pushlightuserdata(L, module_mt);
     lua_pushlightuserdata(L, func_mt);
     lua_pushlightuserdata(L, bb_mt);
@@ -169,6 +179,7 @@ int luaopen_llbcore(lua_State* L) {
     lua_setfield(L, LUA_REGISTRYINDEX, LLB_BASICBLOCK);
     lua_setfield(L, LUA_REGISTRYINDEX, LLB_FUNCTION);
     lua_setfield(L, LUA_REGISTRYINDEX, LLB_MODULE);
+    lua_setfield(L, LUA_REGISTRYINDEX, LLB_INSTRUCTION);
 
     luaL_newlib(L, lib_llb);
     return 1;

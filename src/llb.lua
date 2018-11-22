@@ -24,6 +24,7 @@ do
     core.newclass({}, "module")
     core.newclass(require("function"), "function")
     core.newclass({}, "basicblock")
+    core.newclass({}, "instruction")
 end
 
 return core

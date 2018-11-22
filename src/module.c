@@ -77,3 +77,10 @@ int module_index(lua_State* L) {
     }
     return 1;
 }
+
+int module_tostring(lua_State* L) {
+    LLVMModuleRef module = *(LLVMModuleRef*)luaL_checkudata(L, 1, LLB_MODULE);
+    size_t size;
+    lua_pushstring(L, LLVMGetModuleIdentifier(module, &size));
+    return 1;
+}

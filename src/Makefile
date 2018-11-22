@@ -34,7 +34,7 @@ CC= gcc
 CFLAGS= -O2 -fPIC -Wall -Werror -std=gnu99 $(LLVM_INCLUDEDIR)
 LDFLAGS= $(LLVM_LDFLAGS) $(LLVM_LIBS) -llua
 
-OBJS= function.o llbcore.o module.o bb.o
+OBJS= function.o llbcore.o module.o bb.o instruction.o
 
 .PHONY: none macosx linux clean
 
@@ -57,7 +57,8 @@ $(LLB_DYLIB): $(OBJS)
 	$(CC) -dynamiclib -undefined dynamic_lookup -o $(BIN)/$@ $(OBJS) $(LDFLAGS)
 
 # binary dependencies
-bb.o: bb.c llbcore.h bb.h
-function.o: function.c llbcore.h bb.h function.h
-llbcore.o: llbcore.c llbcore.h module.h bb.h function.h
-module.o: module.c bb.h llbcore.h
+bb.o: bb.c bb.h llbcore.h
+function.o: function.c function.h llbcore.h bb.h
+llbcore.o: llbcore.c llbcore.h module.h bb.h function.h instruction.h
+module.o: module.c module.h bb.h llbcore.h
+instruction.o: instruction.c instruction.h

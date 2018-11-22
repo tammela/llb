@@ -38,9 +38,9 @@ end
 
 function dot:domgraph(dom, name)
     local dot = {}
-    table.insert(dot, 'digraph "Dominance graphs for ' .. name
+    table.insert(dot, 'digraph "Dominance graph for ' .. name
         .. ' function" {')
-    table.insert(dot, '\tlabel="Dominance graphs for ' .. name
+    table.insert(dot, '\tlabel="Dominance graph for ' .. name
         .. ' function";\n')
     for node, dominated in pairs(dom) do
         table.insert(dot, '\tNode' .. tostring(node.ref)
@@ -58,9 +58,9 @@ end
 
 function dot:idomgraph(idom, name)
     local dot = {}
-    table.insert(dot, 'digraph "Imediate Dominance graphs for ' .. name
+    table.insert(dot, 'digraph "Imediate Dominance graph for ' .. name
         .. ' function" {')
-    table.insert(dot, '\tlabel="Imediate Dominance graphs for ' .. name
+    table.insert(dot, '\tlabel="Imediate Dominance graph for ' .. name
         .. ' function";\n')
     for node, dominated in pairs(idom) do
         table.insert(dot, '\tNode' .. tostring(node.ref)

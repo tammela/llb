@@ -42,7 +42,8 @@
 // ==================================================
 
 #define LLB_MODULE ("__llb_module")
-#define LLB_BASICBLOCK ("__llb_basicblock")
 #define LLB_FUNCTION ("__llb_function")
+#define LLB_BASICBLOCK ("__llb_basicblock")
+#define LLB_INSTRUCTION ("__llb_instruction")
 
 #endif
