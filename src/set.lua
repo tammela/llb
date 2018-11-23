@@ -23,22 +23,6 @@ set.__index = set
 
 -----------------------------------------------------
 --
---  auxiliary
---
------------------------------------------------------
-
--- TODO: temporary
--- TODO: should we check for types? is it not automatic?
-local function checktypes(...)
-    for _, s in ipairs({...}) do
-        if getmetatable(s) ~= set then
-            error("attempt to perform set operation over non-set value(s)", 2)
-        end
-    end
-end
-
------------------------------------------------------
---
 --  set
 --
 -----------------------------------------------------
@@ -95,7 +79,6 @@ function set:__tostring()
 end
 
 function set.__add(a, b) -- a `union` b
-    checktypes(a, b)
     local t = set.new()
     for e in pairs(a) do t:add(e) end
     for e in pairs(b) do t:add(e) end
@@ -103,16 +86,15 @@ function set.__add(a, b) -- a `union` b
 end
 
 function set.__mul(a, b) -- a `intersection` b
-    checktypes(a, b)
     local t = set.new()
     for e in pairs(a) do t:add(b[e]) end
     return t
 end
 
 function set.__sub(a, b) -- a - b
-    checktypes(a, b)
     local t = set.new()
     for e in pairs(a) do
+        print(a, b, b[e], e)
         if not b[e] then
             t:add(e)
         end
@@ -121,7 +103,6 @@ function set.__sub(a, b) -- a - b
 end
 
 function set.__eq(a, b)
-    checktypes(a, b)
     local i = 0
     for e in pairs(a) do
         if not b[e] then
