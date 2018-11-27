@@ -121,26 +121,21 @@ function fn:idomgraph()
     all:add(table.unpack(bbgraph))
 
     local entry = bbgraph[1] -- TODO is entry bb always bbgraph[1]?
-
-    local tmp = {}
     local idom = {}
+    local regn = all - {entry} -- regular nodes
 
-    for n in pairs(all) do
-        tmp[n] = dom[n] - {n}
+    for n in pairs(regn) do
+        idom[n] = dom[n] - {n}
     end
 
-    for n in pairs(all - {entry}) do
-        for s in pairs(tmp[n]) do
-            for t in pairs(tmp[n] - {s}) do
-                if tmp[s]:contains(t) then
-                    tmp[n] = tmp[n] - {t}
+    for n in pairs(regn) do
+        for s in pairs(idom[n]) do
+            for t in pairs(idom[n] - {s}) do
+                if idom[s]:contains(t) then
+                    idom[n] = idom[n] - {t}
                 end
             end
         end
-    end
-
-    for n in pairs(all - {entry}) do
-        idom[n] = tmp[n]
     end
 
     return idom

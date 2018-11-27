@@ -79,6 +79,9 @@ function set:__tostring()
 end
 
 function set.__add(a, b) -- a `union` b
+    if getmetatable(b) ~= set then
+        b = set.new(table.unpack(b))
+    end
     local t = set.new()
     for e in pairs(a) do t:add(e) end
     for e in pairs(b) do t:add(e) end
@@ -86,15 +89,20 @@ function set.__add(a, b) -- a `union` b
 end
 
 function set.__mul(a, b) -- a `intersection` b
+    if getmetatable(b) ~= set then
+        b = set.new(table.unpack(b))
+    end
     local t = set.new()
     for e in pairs(a) do t:add(b[e]) end
     return t
 end
 
 function set.__sub(a, b) -- a - b
+    if getmetatable(b) ~= set then
+        b = set.new(table.unpack(b))
+    end
     local t = set.new()
     for e in pairs(a) do
-        print(a, b, b[e], e)
         if not b[e] then
             t:add(e)
         end

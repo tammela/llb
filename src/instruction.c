@@ -45,22 +45,20 @@ int instruction_tostring(lua_State* L) {
 
     const char* inst_label = LLVMGetValueName(inst);
 
-    char str[80] = "";
     switch (op) {
-        default:
         case LLVMAlloca: {
             const char* alloca_type =
                 LLVMPrintTypeToString(LLVMGetAllocatedType(inst));
-            sprintf(str, "%%%s = alloca %s", inst_label, alloca_type);
+            lua_pushfstring(L, "%%%s = alloca %s", inst_label, alloca_type);
             break;
         }
         case LLVMRet: {
             int num_operands = LLVMGetNumOperands(inst);
             if (num_operands == 0) {
-                sprintf(str, "ret void");
+                lua_pushstring(L, "ret void");
             } else {
                 LLVMValueRef operand = LLVMGetOperand(inst, 0);
-                sprintf(str, "ret %s %%%s",
+                lua_pushfstring(L, "ret %s %%%s",
                     LLVMPrintTypeToString(LLVMTypeOf(operand)),
                     LLVMGetValueName(operand));
             }
@@ -127,10 +125,10 @@ int instruction_tostring(lua_State* L) {
         case LLVMCatchRet:
         case LLVMCatchPad:
         case LLVMCleanupPad:
+        default:
+            lua_pushstring(L, "Not yet implemented");
             break;
     }
-
-    lua_pushstring(L, str);
 
     return 1;
 }
