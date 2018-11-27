@@ -1,54 +1,51 @@
 #
-# Lua binding for LLVM C API.
-# Copyright (C) 2018 Matheus Ambrozio, Pedro Tammela, Renan Almeida.
-#
-# This file is part of lua-llvm-binding.
-#
-# lua-llvm-binding is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 2 of the License, or
-# (at your option) any later version.
-#
-# lua-llvm-binding is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with lua-llvm-binding. If not, see <http://www.gnu.org/licenses/>.
+# Makefile for installing LLB
 #
 
-BIN= ./bin
-MKDIR_P= mkdir -p
+# == CHANGE THE SETTINGS BELOW TO SUIT YOUR ENVIRONMENT =======================
 
-.PHONY: clean format create_dir copy_lua_files linux macosx test test_set
+# Your platform. See PLATS for possible values.
+PLAT= none
+
+# Install.
+BIN= bin/
+
+# Other utilities.
+FMT= clang-format -i -style=file
+MKDIR= mkdir -p
+RM= rm -f
+
+# == END OF USER SETTINGS -- NO NEED TO CHANGE ANYTHING BELOW THIS LINE =======
+
+# Convenience platforms targets.
+PLATS= linux macosx
+
+# LLB version.
+V= 0.1
+
+# Targets start here.
+all: $(PLAT)
+
+$(PLATS):
+	$(MKDIR) $(BIN)
+	cd src && $(MAKE) $@
+	cp src/*.lua bin/
 
 none:
-	@echo "invalid platform"
+	@echo "Please do 'make PLATFORM' where PLATFORM is one of these:"
+	@echo "    $(PLATS)"
+
+test:
+	cd tests && $(MAKE)
 
 format:
-	clang-format -i -style=file ./src/*.c ./src/*.h
-
-create_dir:
-	@- ${MKDIR_P} $(BIN)
-
-copy_lua_files:
-	@- cp ./src/*.lua ./bin/
-
-linux: format create_dir copy_lua_files
-	cd src && $(MAKE) $@
-
-macosx: format create_dir copy_lua_files
-	cd src && $(MAKE) $@
-
-# FIXME
-test: copy_lua_files
-	@- cd tests && lua test_renan.lua
-
-# FIXME
-test_set: copy_lua_files
-	@- cd tests && lua test_set.lua
+	$(FMT) ./src/*.c ./src/*.h
 
 clean:
-	rm -rf ./bin
+	$(RM) -r ./bin
 	cd src && $(MAKE) $@
+
+# list targets that do not create files (but not all makes understand .PHONY)
+.PHONY: all $(PLATS) none test format clean
+
+# (end of Makefile)
