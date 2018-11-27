@@ -18,7 +18,7 @@
 -- along with lua-llvm-binding. If not, see <http://www.gnu.org/licenses/>.
 --
 
-require "setup"
+printheader("set.lua")
 
 local set = require "set"
 
@@ -26,178 +26,212 @@ do -- new
     do -- empty
         local s = set.new()
         assert(s:is_empty())
-        assert(s:size() == 0)
     end
 
-    do -- unit
+    do -- one
         local s = set.new(1)
-        assert(not s:is_empty())
         assert(s:size() == 1)
-        assert((s * s):size() == 1)
-        assert((s + s):size() == 1)
-        assert((s - s):is_empty())
+        assert(s:contains(1))
     end
 
     do -- many
         local s = set.new(1, 2, 3)
-        assert(not s:is_empty())
         assert(s:size() == 3)
+        assert(s:contains(1, 2, 3))
     end
 end
 
-do -- copy
-    local s = set.new(1)
-    local c = s:copy()
-    assert(c:size() == 1)
-    assert(s == c)
-
-    s:add(2)
-    assert(s:size() == 2)
-    assert(c:size() == 1)
-
-    c:add(3, 4)
-    assert(s:size() == 2)
-    assert(c:size() == 3)
-end
-
-do
+do -- add & remove
     local s = set.new()
-    -- add
-    s:add(1)
-    assert(not s:is_empty())
+
+    -- add (one)
+    s:add("a")
     assert(s:size() == 1)
-    assert(s[1])
-    s:add(2, 3, 4)
-    assert(s[1] and s[2] and s[3] and s[4])
-    assert(not s:is_empty())
+    assert(s:contains("a"))
+
+    -- add (many)
+    s:add("b", "c", "d")
     assert(s:size() == 4)
-    -- remove
-    s:remove(1)
-    assert(not s[1] and s[2] and s[3] and s[4])
-    assert(not s:is_empty())
+    assert(s:contains("a", "b", "c", "d"))
+
+    -- add (repeated)
+    s:add("b")
+    assert(s:size() == 4)
+    assert(s:contains("a", "b", "c", "d"))
+    
+    -- remove (one)
+    s:remove("b")
     assert(s:size() == 3)
-    s:remove(2, 4)
-    assert(not s[1] and not s[2] and s[3] and not s[4])
-    assert(not s:is_empty())
+    assert(s["a"] and not s["b"] and s["c"] and s["d"])
+    assert(s:contains("a", "c", "d") and not s["b"])
+    
+    -- remove (many)
+    s:remove("a", "d")
     assert(s:size() == 1)
-    s:remove(3)
-    assert(not s[1] and not s[2] and not s[3] and not s[4])
-    assert(s:is_empty())
-    assert(s:size() == 0)
+    assert(s:contains("c") and not s["a"] and not s["b"] and not s["d"])
+    
+    -- remove (non existing)
+    s:remove("e")
+    assert(s:size() == 1)
+    assert(s:contains("c") and not s["a"] and not s["b"] and not s["d"])
 end
 
-do -- a + b
-    do
-        local a = set.new()
-        local b = set.new()
-        local u = a + b
-        assert(u:is_empty())
+-- is_empty & size & contains (tested above)
+
+do -- __tostring
+    do -- simple
+        local s = set.new(1, 2, 3)
+        assert(tostring(s) == "{1, 2, 3}")
     end
 
-    do
-        local a = set.new()
-        local b = set.new()
-        a:add("1", "2", "3")
-        b:add("4", "5", "6")
-        local u = a + b
-        assert(u:size() == 6)
-    end
-
-    do
-        local a = set.new()
-        local b = set.new()
-        a:add("1", "2", "3")
-        b:add("2", "3", "4")
-        local u = a + b
-        assert(u:size() == 4)
-    end
-
-    do
-        local a = set.new()
-        a:add("1")
-        local u = a + a
-        assert(u:size() == 1)
+    do -- reference
+       local s = set.new({ref = "A"}, {ref = "B"})
+        assert(tostring(s) == "{A, B}") 
     end
 end
 
-do -- a * b
-    do
+do -- union
+    do -- empty sets
         local a = set.new()
         local b = set.new()
-        local i = a * b
-        assert(i:is_empty())
+        local s
+
+        s = a + b
+        assert(s:is_empty())
+
+        s = a + {}
+        assert(s:is_empty())
+
+        s = {} + b
+        assert(s:is_empty())
     end
 
-    do
+    do -- non-empty sets
+        local a = set.new(1, 2, 3)
+        local b = set.new(4, 5, 6)
+        local s
+
+        s = a + b
+        assert(s == set.new(1, 2, 3, 4, 5, 6))
+
+        s = a + {4}
+        assert(s == set.new(1, 2, 3, 4))        
+
+        s = {1} + b
+        assert(s == set.new(1, 4, 5, 6))
+    end
+
+    do -- sets with an intersection
+        local a = set.new(1, 2, 3)
+        local b = set.new(2, 3, 4)
+        local s = a + b
+        assert(s == set.new(1, 2, 3, 4))
+    end
+
+    do -- same set
+        local a = set.new(1)
+        local s = a + a
+        assert(s == a)
+    end
+end
+
+do -- intersection
+    do -- empty sets
         local a = set.new()
         local b = set.new()
-        a:add("1", "2", "3")
-        b:add("4", "5", "6")
-        local i = a * b
-        assert(i:is_empty())
+        local s
+
+        s = a * b
+        assert(s:is_empty())
+
+        s = a * {}
+        assert(s:is_empty())
+
+        s = {} * b
+        assert(s:is_empty())
     end
 
-    do
-        local a = set.new()
-        local b = set.new()
-        a:add("1", "2", "3")
-        b:add("2", "3", "4")
-        local i = a * b
-        assert(i:size() == 2)
+    do -- non-empty sets
+        local a = set.new(1, 2, 3)
+        local b = set.new(4, 5, 6)
+        local s
+
+        s = a * b
+        assert(s == set.new())
+
+        s = a * {2}
+        assert(s == set.new(2))
+
+        s = {6, 4} * b
+        assert(s == set.new(4, 6))
     end
 
-    do
-        local a = set.new()
-        a:add("1")
-        local i = a * a
-        assert(i:size() == 1)
+    do -- sets with an intersection
+        local a = set.new(1, 2, 3)
+        local b = set.new(2, 3, 4)
+        local s = a * b
+        assert(s == set.new(2, 3))
+    end
+
+    do -- same set
+        local a = set.new(1)
+        local s = a * {1}
+        assert(s == a)
     end
 
     do -- a * {}
         local a = set.new("a", "b", "c")
-        local empty = set.new()
-        local s = a * empty
-        assert(s == empty)
+        local s = a * {}
+        assert(s == set.new())
     end
 end
 
-do -- a - b
-    do
+do -- subtraction
+    do -- empty sets
         local a = set.new()
         local b = set.new()
-        local m = a - b
-        assert(m:is_empty())
+        local s
+
+        s = a - b
+        assert(s:is_empty())
+
+        s = a - {}
+        assert(s:is_empty())
+
+        s = {} - b
+        assert(s:is_empty())
     end
 
-    do
-        local a = set.new()
-        local b = set.new()
-        a:add("1", "2", "3")
-        b:add("4", "5", "6")
-        local m = a - b
-        assert(m:size() == 3)
-        assert(m["1"] and m["2"] and m["3"])
+    do -- non-empty sets
+        local a = set.new(1, 2, 3)
+        local b = set.new(4, 5, 6)
+        local s
+
+        s = a - b
+        assert(s == a)
+
+        s = a - {2}
+        assert(s == set.new(1, 3))
+
+        s = {4, 6} - b
+        assert(s == set.new())
     end
 
-    do
-        local a = set.new()
-        local b = set.new()
-        a:add("1", "2", "3")
-        b:add("2", "3", "4")
-        local m = a - b
-        assert(m:size() == 1)
-        assert(m["1"])
+    do -- sets with an intersection
+        local a = set.new(1, 2, 3)
+        local b = set.new(2, 3, 4)
+        local s = a - b
+        assert(s == set.new(1))
     end
 
-    do
-        local a = set.new()
-        a:add("1")
-        local m = a - a
+    do -- same set
+        local a = set.new(5)
+        local m = a - {5}
         assert(m:is_empty())
     end
 end
 
-do -- a == b
+do -- equality
     do
         local a = set.new(1)
         local b = set.new(2)
@@ -220,18 +254,4 @@ do -- a == b
     end
 end
 
-do -- a contains b
-    local a = set.new(1, 2, 3, 4, 5)
-    local b = 3
-    local c = 7
-    assert(a:contains(b) == true)
-    assert(a:contains(c) == false)
-end
-
-do -- __tostring
-    local s = set.new()
-    s:add(2, 3, 4)
-    assert(tostring(s) == "{2, 3, 4}")
-end
-
-print("-- test set ok")
+printok()

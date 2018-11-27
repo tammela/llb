@@ -19,23 +19,21 @@
 --
 
 local set = {}
-set.__index = set
+set.__index = set -- TODO: why do we need this?
 
------------------------------------------------------
---
---  set
---
------------------------------------------------------
+-- auxiliary
+local function checkcast(a, b)
+    local function f(x)
+        return getmetatable(x) == set and x or set.new(table.unpack(x))
+    end
+    return f(a), f(b)
+end
 
 function set.new(...)
     local t = {}
     setmetatable(t, set)
     t:add(...)
     return t
-end
-
-function set:copy()
-    return set.new() + self
 end
 
 function set:add(...)
@@ -51,56 +49,51 @@ function set:remove(...)
 end
 
 function set:is_empty()
-    for _ in pairs(self) do return false end
-    return true
+    return next(self) == nil
 end
 
 function set:size()
     local i = 0
-    for _ in pairs(self) do i = i + 1 end
+    for _ in pairs(self) do
+        i = i + 1
+    end
     return i
 end
 
-function set:contains(e)
-    if self[e] ~= nil then return true end
-    return false
+function set:contains(...)
+    for _, e in ipairs({...}) do
+        if self[e] == nil then
+            return false
+        end
+    end
+    return true
 end
 
 function set:__tostring()
     local t = {}
     for e in pairs(self) do
-        if type(e) == 'table' then
-            table.insert(t, tostring(e.ref or e))
-        else
-            table.insert(t, tostring(e))
-        end
+        table.insert(t, tostring(type(e) == "table" and e.ref or e))
     end
     return "{" .. table.concat(t, ", ") .. "}"
 end
 
-function set.__add(a, b) -- a `union` b
-    if getmetatable(b) ~= set then
-        b = set.new(table.unpack(b))
-    end
+function set.__add(a, b) -- union
+    a, b = checkcast(a, b)
     local t = set.new()
     for e in pairs(a) do t:add(e) end
     for e in pairs(b) do t:add(e) end
     return t
 end
 
-function set.__mul(a, b) -- a `intersection` b
-    if getmetatable(b) ~= set then
-        b = set.new(table.unpack(b))
-    end
+function set.__mul(a, b) -- intersection
+    a, b = checkcast(a, b)
     local t = set.new()
     for e in pairs(a) do t:add(b[e]) end
     return t
 end
 
-function set.__sub(a, b) -- a - b
-    if getmetatable(b) ~= set then
-        b = set.new(table.unpack(b))
-    end
+function set.__sub(a, b)
+    a, b = checkcast(a, b)
     local t = set.new()
     for e in pairs(a) do
         if not b[e] then
