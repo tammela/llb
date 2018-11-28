@@ -18,15 +18,18 @@
 -- along with lua-llvm-binding. If not, see <http://www.gnu.org/licenses/>.
 --
 
-require "setup"
+local testing = {}
 
-local llb = require "llb"
+function testing.case(case)
+    print("--- case: " .. case) 
+end
 
-local fs = assert(llb.load_ir("aux/sum.ll"))
+function testing.header(header)
+    print("----- Testing " .. header)
+end
 
-local main = fs["main"]
+function testing.ok()
+    print("-- Ok")
+end
 
-local bbgraph = main:bbgraph()
-print(bbgraph)
-
-main:domgraph()
+return testing

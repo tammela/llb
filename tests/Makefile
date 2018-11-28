@@ -2,5 +2,8 @@
 # Makefile for testing LLB
 #
 
+TEST= @- lua -l setup
+
 all:
-	lua -l setup test_set.lua
+	$(TEST) test_set.lua
+	$(TEST) test_functions.lua

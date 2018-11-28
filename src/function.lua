@@ -80,25 +80,32 @@ function fn:bbgraph()
     return nodes
 end
 
--- computes the dominance graph of a function
-function fn:domgraph()
-    local bbgraph = self:bbgraph()
-    local all = set.new()
-    all:add(table.unpack(bbgraph))
-    local entry = bbgraph[1] -- TODO is entry bb always bbgraph[1]?
+-- computes the dominance tree of a function
+function fn:domtree(bbgraph)
+    bbgraph = bbgraph or self:bbgraph()
 
+    local all = set.new(table.unpack(bbgraph))
+    local entry = bbgraph[1] -- TODO: is the entry bb always bbgraph[1]?
+    local regularnodes = all - {entry}
     local dom = {} -- {node: set<node>}
 
-    local regn = all - {entry} -- regular nodes
-
     dom[entry] = set.new(entry)
-    for n in pairs(regn) do
+    for n in pairs(regularnodes) do
         dom[n] = all
     end
 
+    -- FIXME: Renan is debugging
+    -- for k, v in pairs(dom) do
+    --     io.write(tostring(k.ref))
+    --     io.write(" ")
+    --     io.write(tostring(v))
+    --     io.write("\n")
+    -- end
+    -- io.write("----------\n")
+
     repeat
         local change = false
-        for n in pairs(regn) do
+        for n in pairs(regularnodes) do
             local D = all
             for p in pairs(n.predecessors) do
                 D = D * dom[p]
@@ -111,24 +118,24 @@ function fn:domgraph()
         end
     until not change
 
-    return dom, bbgraph -- necessary to idomgraph. TODO think of a better way
+    return dom
 end
 
--- computes the imediate dominance graph of a function
-function fn:idomgraph()
-    local dom, bbgraph = self:domgraph() -- getting the same refs
-    local all = set.new()
-    all:add(table.unpack(bbgraph))
+-- computes the imediate dominance tree of a function
+function fn:idomtree(bbgraph)
+    bbgraph = bbgraph or self:bbgraph()
+    local dom = self:domgraph()
 
-    local entry = bbgraph[1] -- TODO is entry bb always bbgraph[1]?
+    local all = set.new(table.unpack(bbgraph))
+    local entry = bbgraph[1] -- TODO: is the entry bb always bbgraph[1]?
+    local regularnodes = all - {entry}
     local idom = {}
-    local regn = all - {entry} -- regular nodes
 
-    for n in pairs(regn) do
+    for n in pairs(regularnodes) do
         idom[n] = dom[n] - {n}
     end
 
-    for n in pairs(regn) do
+    for n in pairs(regularnodes) do
         for s in pairs(idom[n]) do
             for t in pairs(idom[n] - {s}) do
                 if idom[s]:contains(t) then

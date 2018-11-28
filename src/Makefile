@@ -9,6 +9,8 @@ BIN= ../bin/
 
 LLB_SO= llbcore.so
 LLB_DYLIB= llbcore.dylib
+TO_SO= $(BIN)/$(LLB_SO)
+TO_DYLIB= $(BIN)/$(LLB_DYLIB)
 
 # LLVM settings.
 LLVM_INCLUDEDIR= -I$(shell llvm-config --includedir)
@@ -31,10 +33,10 @@ none:
 	@echo "    $(PLATS)"
 
 macosx: $(OBJS)
-	$(CC) -dynamiclib -undefined dynamic_lookup -o $(BIN)/$@ $(OBJS) $(LDFLAGS)
+	$(CC) -dynamiclib -undefined dynamic_lookup -o $(TO_DYLIB) $(OBJS) $(LDFLAGS)
 
 linux: $(OBJS)
-	$(CC) -shared -dl -Wl,-soname,$(LLB_SO) -o $(BIN)/$@ $(OBJS) $(LDFLAGS)
+	$(CC) -shared -dl -Wl,-soname,$(LLB_SO) -o $(TO_SO) $(OBJS) $(LDFLAGS)
 
 clean:
 	$(RM) $(LLB_SO) $(LLB_DYLIB) $(OBJS)

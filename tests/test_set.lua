@@ -18,9 +18,10 @@
 -- along with lua-llvm-binding. If not, see <http://www.gnu.org/licenses/>.
 --
 
-printheader("set.lua")
-
+local testing = require "testing"
 local set = require "set"
+
+testing.header("set.lua")
 
 do -- new
     do -- empty
@@ -254,4 +255,4 @@ do -- equality
     end
 end
 
-printok()
+testing.ok()
