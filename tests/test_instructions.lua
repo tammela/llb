@@ -23,20 +23,27 @@ local llb = require "llb"
 
 testing.header("instructions")
 
-local main = llb.load_ir("aux/works.ll")["main"]
+local main = llb.load_ir("aux/instruction.ll")["main"]
 assert(main)
 
 do -- TODO
     local bbs = main:basic_blocks()
     assert(bbs)
 
-    for i, bb in ipairs(bbs) do
-        io.write(tostring(bb) .. ":\n")
-        local instructions = bb:instructions()
-        for i, instruction in ipairs(instructions) do
-            io.write("\t")
-            print(instruction)
-        end
+    -- for i, bb in ipairs(bbs) do
+    --     print(bb)
+    --     local instructions = bb:instructions()
+    --     for i, instruction in ipairs(instructions) do
+    --         print(instruction)
+    --     end
+    -- end
+
+    -- LLVMValueRef LLVMGetOperand(LLVMValueRef, unsigned index);
+    -- void LLVMReplaceAllUsesWith(LLVMValueRef old, LLVMValueRef new);
+    -- LLVMOpcode LLVMGetInstructionOpcode(LLVMValueRef instruction);
+
+    for k, v in pairs(instruction.type) do
+        print(k, v)
     end
 end
 

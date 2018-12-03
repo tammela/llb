@@ -18,13 +18,11 @@
 -- along with lua-llvm-binding. If not, see <http://www.gnu.org/licenses/>.
 --
 
-local llb = require "llbc"
+local instruction = {}
 
-do
-    llb.newclass({}, "module")
-    llb.newclass(require("function"), "function")
-    llb.newclass({}, "basicblock")
-    llb.newclass(require("instruction"), "instruction")
+-- TODO
+function instruction:todo()
+    
 end
 
-return llb
+return instruction

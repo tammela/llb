@@ -62,9 +62,9 @@ do -- bbgraph
 end
 
 do -- dom
-    local bbgraph = main:bbgraph()
-    local domtree = main:domtree(bbgraph)
-    local bb = bbgraphmap(bbgraph)
+    -- local bbgraph = main:bbgraph()
+    -- local domtree = main:domtree(bbgraph)
+    -- local bb = bbgraphmap(bbgraph)
 
     -- for k, v in pairs(domtree) do print(k.ref) end
     -- print("domtree[bb.entry] = " .. tostring(domtree[bb.entry]))
