@@ -139,4 +139,11 @@ function fn:idomtree(bbgraph)
     return idom
 end
 
+-- puts the IR in true SSA form (withot useless alloca/store/load instructions)
+function fn:ssa(bbgraph)
+    bbgraph = bbgraph or self:bbgraph()
+    -- TODO
+    return bbgraph
+end
+
 return fn
