@@ -18,13 +18,35 @@
 -- along with lua-llvm-binding. If not, see <http://www.gnu.org/licenses/>.
 --
 
-local llbc = require "llbc"
+local testing = require "testing"
+local llb = require "llb"
 
-do
-    llbc.newclass({}, "module")
-    llbc.newclass(require("function"), "function")
-    llbc.newclass({}, "basicblock")
-    llbc.newclass({}, "instruction")
+testing.header("instructions")
+
+local main = llb.load_ir("aux/works.ll")["main"]
+assert(main)
+
+do -- TODO
+    local bbs = main:basic_blocks()
+    assert(bbs)
+
+    for i, bb in ipairs(bbs) do
+        io.write(tostring(bb) .. ":\n")
+        local instructions = bb:instructions()
+        for i, instruction in ipairs(instructions) do
+            io.write("\t")
+            print(instruction)
+        end
+    end
 end
 
-return llbc
+testing.ok()
+
+
+
+
+
+
+
+
+

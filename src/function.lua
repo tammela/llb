@@ -94,15 +94,6 @@ function fn:domtree(bbgraph)
         dom[n] = all
     end
 
-    -- FIXME: Renan is debugging
-    -- for k, v in pairs(dom) do
-    --     io.write(tostring(k.ref))
-    --     io.write(" ")
-    --     io.write(tostring(v))
-    --     io.write("\n")
-    -- end
-    -- io.write("----------\n")
-
     repeat
         local change = false
         for n in pairs(regularnodes) do
