@@ -25,7 +25,7 @@
 
 #include "bb.h"
 #include "instruction.h"
-#include "llbcore.h"
+#include "llbc.h"
 
 int bb_new(lua_State* L, LLVMBasicBlockRef bb) {
     newuserdata(L, bb, LLB_BASICBLOCK);

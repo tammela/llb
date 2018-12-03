@@ -7,8 +7,8 @@ PLAT= none
 
 BIN= ../bin/
 
-LLB_SO= llbcore.so
-LLB_DYLIB= llbcore.dylib
+LLB_SO= llbc.so
+LLB_DYLIB= llbc.dylib
 TO_SO= $(BIN)/$(LLB_SO)
 TO_DYLIB= $(BIN)/$(LLB_DYLIB)
 
@@ -23,7 +23,7 @@ CC= gcc
 CFLAGS= -O2 -fPIC -Wall -Werror -std=gnu99 $(LLVM_INCLUDEDIR)
 LDFLAGS= $(LLVM_LDFLAGS) $(LLVM_LIBS) -llua
 
-OBJS= function.o llbcore.o module.o bb.o instruction.o
+OBJS= function.o llbc.o module.o bb.o instruction.o
 
 # Targets start here.
 default: $(PLAT)
@@ -42,10 +42,10 @@ clean:
 	$(RM) $(LLB_SO) $(LLB_DYLIB) $(OBJS)
 
 # Binary dependencies.
-bb.o: bb.c bb.h llbcore.h
-function.o: function.c function.h llbcore.h bb.h
-llbcore.o: llbcore.c llbcore.h module.h bb.h function.h instruction.h
-module.o: module.c module.h bb.h llbcore.h
+bb.o: bb.c bb.h llbc.h
+function.o: function.c function.h llbc.h bb.h
+llbc.o: llbc.c llbc.h module.h bb.h function.h instruction.h
+module.o: module.c module.h bb.h llbc.h
 instruction.o: instruction.c instruction.h
 
 # list targets that do not create files (but not all makes understand .PHONY)

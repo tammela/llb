@@ -25,7 +25,7 @@
 #include <llvm-c/Core.h>
 
 #include "instruction.h"
-#include "llbcore.h"
+#include "llbc.h"
 
 int instruction_new(lua_State* L, LLVMValueRef instruction) {
     newuserdata(L, instruction, LLB_INSTRUCTION);

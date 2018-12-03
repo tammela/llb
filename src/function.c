@@ -26,7 +26,7 @@
 
 #include "bb.h"
 #include "function.h"
-#include "llbcore.h"
+#include "llbc.h"
 
 int function_new(lua_State* L, LLVMValueRef function) {
     newuserdata(L, function, LLB_FUNCTION);

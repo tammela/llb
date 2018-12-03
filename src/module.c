@@ -24,7 +24,7 @@
 #include <llvm-c/Core.h>
 
 #include "function.h"
-#include "llbcore.h"
+#include "llbc.h"
 
 int module_new(lua_State* L, LLVMModuleRef module) {
     newuserdata(L, module, LLB_MODULE);

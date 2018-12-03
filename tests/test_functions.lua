@@ -66,10 +66,7 @@ do -- dom
     local domtree = main:domtree(bbgraph)
     local bb = bbgraphmap(bbgraph)
 
-    -- for k, v in pairs(domtree) do
-    --     print(k.ref)
-    -- end
-
+    -- for k, v in pairs(domtree) do print(k.ref) end
     -- print("domtree[bb.entry] = " .. tostring(domtree[bb.entry]))
 
     -- assert(domtree[bb.entry] == set.new(bb.entry, bb.l1, bb.l2, bb.l3))
