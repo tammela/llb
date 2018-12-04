@@ -115,7 +115,7 @@ end
 -- computes the imediate dominance tree of a function
 function fn:idomtree(bbgraph)
     bbgraph = bbgraph or self:bbgraph()
-    local dom = self:domgraph(bbgraph)
+    local dom = self:domtree(bbgraph)
 
     local all = set.new(table.unpack(bbgraph))
     local entry = bbgraph[1] -- TODO: is the entry bb always bbgraph[1]?

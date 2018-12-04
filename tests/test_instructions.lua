@@ -30,13 +30,13 @@ do -- TODO
     local bbs = main:basic_blocks()
     assert(bbs)
 
-    for i, bb in ipairs(bbs) do
-        print(bb)
-        local instructions = bb:instructions()
-        for i, instruction in ipairs(instructions) do
-            print(instruction)
-        end
-    end
+    -- for i, bb in ipairs(bbs) do
+    --     print(bb)
+    --     local instructions = bb:instructions()
+    --     for i, instruction in ipairs(instructions) do
+    --         print(instruction)
+    --     end
+    -- end
 
     -- LLVMValueRef LLVMGetOperand(LLVMValueRef, unsigned index);
     -- void LLVMReplaceAllUsesWith(LLVMValueRef old, LLVMValueRef new);
