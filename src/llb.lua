@@ -18,7 +18,7 @@
 -- along with lua-llvm-binding. If not, see <http://www.gnu.org/licenses/>.
 --
 
-local llb = require "llbc"
+local llb = require "core"
 
 do
     llb.newclass({}, "module")

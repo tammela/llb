@@ -27,9 +27,9 @@
 #include <llvm-c/IRReader.h>
 
 #include "bb.h"
+#include "core.h"
 #include "function.h"
 #include "instruction.h"
-#include "llbc.h"
 #include "module.h"
 
 static int llb_newclass(lua_State* L) {
@@ -161,7 +161,7 @@ struct luaL_Reg inst_mt[] = {
 //  luaopen
 //
 // ==================================================
-int luaopen_llbc(lua_State* L) {
+int luaopen_core(lua_State* L) {
     // clang-format off
     const luaL_Reg lib_llb[] = {
         {"load_ir", llb_load_ir},
@@ -172,15 +172,15 @@ int luaopen_llbc(lua_State* L) {
     };
     // clang-format on
 
-    lua_pushlightuserdata(L, inst_mt);
     lua_pushlightuserdata(L, module_mt);
     lua_pushlightuserdata(L, func_mt);
     lua_pushlightuserdata(L, bb_mt);
+    lua_pushlightuserdata(L, inst_mt);
 
+    lua_setfield(L, LUA_REGISTRYINDEX, LLB_INSTRUCTION);
     lua_setfield(L, LUA_REGISTRYINDEX, LLB_BASICBLOCK);
     lua_setfield(L, LUA_REGISTRYINDEX, LLB_FUNCTION);
     lua_setfield(L, LUA_REGISTRYINDEX, LLB_MODULE);
-    lua_setfield(L, LUA_REGISTRYINDEX, LLB_INSTRUCTION);
 
     luaL_newlib(L, lib_llb);
     return 1;

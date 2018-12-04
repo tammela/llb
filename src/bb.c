@@ -24,8 +24,8 @@
 #include <llvm-c/Core.h>
 
 #include "bb.h"
+#include "core.h"
 #include "instruction.h"
-#include "llbc.h"
 
 #define getbasicblock(L) \
     (*(LLVMBasicBlockRef*)luaL_checkudata(L, 1, LLB_BASICBLOCK));

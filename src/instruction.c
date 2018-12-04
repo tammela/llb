@@ -24,8 +24,8 @@
 
 #include <llvm-c/Core.h>
 
+#include "core.h"
 #include "instruction.h"
-#include "llbc.h"
 
 #define getinstruction(L) \
     (*(LLVMValueRef*)luaL_checkudata(L, 1, LLB_INSTRUCTION))
@@ -42,7 +42,8 @@ int instruction_label(lua_State* L) {
 }
 
 int instruction_operands(lua_State* L) {
-    LLVMValueRef instruction = *(LLVMValueRef*)luaL_checkudata(L, 1, LLB_INSTRUCTION);
+    LLVMValueRef instruction =
+        *(LLVMValueRef*)luaL_checkudata(L, 1, LLB_INSTRUCTION);
     int num_operands = LLVMGetNumOperands(instruction);
 
     lua_newtable(L);

@@ -23,11 +23,10 @@
 
 #include <llvm-c/Core.h>
 
+#include "core.h"
 #include "function.h"
-#include "llbc.h"
 
-#define getmodule(L) \
-    (*(LLVMModuleRef*)luaL_checkudata(L, 1, LLB_MODULE))
+#define getmodule(L) (*(LLVMModuleRef*)luaL_checkudata(L, 1, LLB_MODULE))
 
 int module_new(lua_State* L, LLVMModuleRef module) {
     newuserdata(L, module, LLB_MODULE);

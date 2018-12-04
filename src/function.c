@@ -25,11 +25,10 @@
 #include <llvm-c/Core.h>
 
 #include "bb.h"
+#include "core.h"
 #include "function.h"
-#include "llbc.h"
 
-#define getfunction(L) \
-    (*(LLVMValueRef*)luaL_checkudata(L, 1, LLB_FUNCTION));
+#define getfunction(L) (*(LLVMValueRef*)luaL_checkudata(L, 1, LLB_FUNCTION));
 
 int function_new(lua_State* L, LLVMValueRef function) {
     newuserdata(L, function, LLB_FUNCTION);
