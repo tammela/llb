@@ -26,19 +26,22 @@
 #include "function.h"
 #include "llbc.h"
 
+#define getmodule(L) \
+    (*(LLVMModuleRef*)luaL_checkudata(L, 1, LLB_MODULE))
+
 int module_new(lua_State* L, LLVMModuleRef module) {
     newuserdata(L, module, LLB_MODULE);
     return 1;
 }
 
 int module_gc(lua_State* L) {
-    LLVMModuleRef module = *(LLVMModuleRef*)luaL_checkudata(L, 1, LLB_MODULE);
+    LLVMModuleRef module = getmodule(L);
     LLVMDisposeModule(module);
     return 0;
 }
 
 static int module_iterator(lua_State* L) {
-    LLVMModuleRef module = *(LLVMModuleRef*)luaL_checkudata(L, 1, LLB_MODULE);
+    LLVMModuleRef module = getmodule(L);
     if (lua_isnil(L, 2)) {
         LLVMValueRef f = LLVMGetFirstFunction(module);
         const char* fname = LLVMGetValueName(f);
@@ -67,7 +70,7 @@ int module_pairs(lua_State* L) {
 }
 
 int module_index(lua_State* L) {
-    LLVMModuleRef module = *(LLVMModuleRef*)luaL_checkudata(L, 1, LLB_MODULE);
+    LLVMModuleRef module = getmodule(L);
     const char* key = luaL_checkstring(L, 2);
     LLVMValueRef f = LLVMGetNamedFunction(module, key);
     if (f == NULL) {
@@ -79,7 +82,7 @@ int module_index(lua_State* L) {
 }
 
 int module_tostring(lua_State* L) {
-    LLVMModuleRef module = *(LLVMModuleRef*)luaL_checkudata(L, 1, LLB_MODULE);
+    LLVMModuleRef module = getmodule(L);
     size_t size;
     lua_pushstring(L, LLVMGetModuleIdentifier(module, &size));
     return 1;

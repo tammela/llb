@@ -41,12 +41,16 @@ int instruction_label(lua_State* L) {
     return 1;
 }
 
-int instruction_store_operands(lua_State* L) {
-    LLVMValueRef instruction = getinstruction(L);
-    LLVMValueRef value = LLVMGetOperand(instruction, 0);
-    LLVMValueRef address = LLVMGetOperand(instruction, 1);
-    lua_pushlightuserdata(L, value);
-    lua_pushlightuserdata(L, address);
+int instruction_operands(lua_State* L) {
+    LLVMValueRef instruction = *(LLVMValueRef*)luaL_checkudata(L, 1, LLB_INSTRUCTION);
+    int num_operands = LLVMGetNumOperands(instruction);
+
+    lua_newtable(L);
+    for (int i = 0; i < num_operands; i++) {
+        lua_pushlightuserdata(L, LLVMGetOperand(instruction, i));
+        lua_seti(L, -2, i + 1);
+    }
+
     return 1;
 }
 

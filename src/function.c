@@ -28,13 +28,16 @@
 #include "function.h"
 #include "llbc.h"
 
+#define getfunction(L) \
+    (*(LLVMValueRef*)luaL_checkudata(L, 1, LLB_FUNCTION));
+
 int function_new(lua_State* L, LLVMValueRef function) {
     newuserdata(L, function, LLB_FUNCTION);
     return 1;
 }
 
 int function_basic_blocks(lua_State* L) {
-    LLVMValueRef f = *(LLVMValueRef*)luaL_checkudata(L, 1, LLB_FUNCTION);
+    LLVMValueRef f = getfunction(L);
     unsigned size = LLVMCountBasicBlocks(f);
 
     lua_newtable(L);
@@ -59,7 +62,7 @@ int function_basic_blocks(lua_State* L) {
 }
 
 int function_tostring(lua_State* L) {
-    LLVMValueRef f = *(LLVMValueRef*)luaL_checkudata(L, 1, LLB_FUNCTION);
+    LLVMValueRef f = getfunction(L);
     lua_pushstring(L, LLVMGetValueName(f));
     return 1;
 }

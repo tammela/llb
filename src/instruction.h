@@ -23,6 +23,7 @@
 
 extern int instruction_new(lua_State*, LLVMValueRef);
 extern int instruction_label(lua_State* L);
+extern int instruction_operands(lua_State* L);
 extern int instruction_tostring(lua_State* L);
 
 #endif

@@ -150,6 +150,7 @@ struct luaL_Reg bb_mt[] = {
 
 struct luaL_Reg inst_mt[] = {
     {"label", instruction_label},
+    {"operands", instruction_operands},
     {"__tostring", instruction_tostring},
     {NULL, NULL}
 };

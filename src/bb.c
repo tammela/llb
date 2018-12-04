@@ -27,21 +27,22 @@
 #include "instruction.h"
 #include "llbc.h"
 
+#define getbasicblock(L) \
+    (*(LLVMBasicBlockRef*)luaL_checkudata(L, 1, LLB_BASICBLOCK));
+
 int bb_new(lua_State* L, LLVMBasicBlockRef bb) {
     newuserdata(L, bb, LLB_BASICBLOCK);
     return 1;
 }
 
 int bb_pointer(lua_State* L) {
-    LLVMBasicBlockRef bb =
-        *(LLVMBasicBlockRef*)luaL_checkudata(L, 1, LLB_BASICBLOCK);
+    LLVMBasicBlockRef bb = getbasicblock(L);
     lua_pushlightuserdata(L, bb);
     return 1;
 }
 
 int bb_successors(lua_State* L) {
-    LLVMBasicBlockRef bb =
-        *(LLVMBasicBlockRef*)luaL_checkudata(L, 1, LLB_BASICBLOCK);
+    LLVMBasicBlockRef bb = getbasicblock(L);
 
     LLVMValueRef terminator = LLVMGetBasicBlockTerminator(bb);
     unsigned n_succs = LLVMGetNumSuccessors(terminator);
@@ -55,8 +56,7 @@ int bb_successors(lua_State* L) {
 }
 
 int bb_instructions(lua_State* L) {
-    LLVMBasicBlockRef bb =
-        *(LLVMBasicBlockRef*)luaL_checkudata(L, 1, LLB_BASICBLOCK);
+    LLVMBasicBlockRef bb = getbasicblock(L);
 
     lua_newtable(L);
 
@@ -72,8 +72,7 @@ int bb_instructions(lua_State* L) {
 }
 
 int bb_tostring(lua_State* L) {
-    LLVMBasicBlockRef bb =
-        *(LLVMBasicBlockRef*)luaL_checkudata(L, 1, LLB_BASICBLOCK);
+    LLVMBasicBlockRef bb = getbasicblock(L);
     lua_pushstring(L, LLVMGetBasicBlockName(bb));
     return 1;
 }
