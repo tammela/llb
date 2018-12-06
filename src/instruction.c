@@ -35,6 +35,12 @@ int instruction_new(lua_State* L, LLVMValueRef instruction) {
     return 1;
 }
 
+int instruction_pointer(lua_State* L) {
+    LLVMValueRef instruction = getinstruction(L);
+    lua_pushlightuserdata(L, instruction);
+    return 1;
+}
+
 int instruction_label(lua_State* L) {
     LLVMValueRef instruction = getinstruction(L);
     lua_pushstring(L, LLVMGetValueName(instruction));
@@ -42,14 +48,33 @@ int instruction_label(lua_State* L) {
 }
 
 int instruction_operands(lua_State* L) {
-    LLVMValueRef instruction =
-        *(LLVMValueRef*)luaL_checkudata(L, 1, LLB_INSTRUCTION);
+    LLVMValueRef instruction = getinstruction(L);
     int num_operands = LLVMGetNumOperands(instruction);
 
     lua_newtable(L);
     for (int i = 0; i < num_operands; i++) {
         lua_pushlightuserdata(L, LLVMGetOperand(instruction, i));
         lua_seti(L, -2, i + 1);
+    }
+
+    return 1;
+}
+
+int instruction_usages(lua_State* L) {
+    LLVMValueRef instruction = getinstruction(L);
+
+    lua_newtable(L);
+
+    int i = 0;
+    for (LLVMUseRef use = LLVMGetFirstUse(instruction); use != NULL;
+         use = LLVMGetNextUse(use)) {
+        LLVMValueRef used_in = LLVMGetUsedValue(use);
+        char* str = LLVMPrintValueToString(instruction);
+        char* str2 = LLVMPrintValueToString(used_in);
+        printf("%s: %s\n", str, str2);
+        lua_pushlightuserdata(L, used_in);
+        lua_seti(L, -2, i + 1);
+        i++;
     }
 
     return 1;

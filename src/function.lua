@@ -82,7 +82,7 @@ end
 
 -- computes the dominance tree of a function
 function fn:domtree(bbgraph)
-    bbgraph = bbgraph or self:bbgraph()
+    local bbgraph = bbgraph or self:bbgraph()
 
     local all = set.new(table.unpack(bbgraph))
     local entry = bbgraph[1] -- TODO: is the entry bb always bbgraph[1]?
@@ -114,7 +114,7 @@ end
 
 -- computes the imediate dominance tree of a function
 function fn:idomtree(bbgraph)
-    bbgraph = bbgraph or self:bbgraph()
+    local bbgraph = bbgraph or self:bbgraph()
     local dom = self:domtree(bbgraph)
 
     local all = set.new(table.unpack(bbgraph))
@@ -139,9 +139,39 @@ function fn:idomtree(bbgraph)
     return idom
 end
 
+function fn:map_instructions(bbgraph)
+    local bbgraph = bbgraph or self:bbgraph()
+    local all_instructions = {}
+    local auxmap = {}
+
+    -- getting all instructions
+    local i = 1
+    for _, bb in ipairs(bbgraph) do
+        for _, inst in ipairs(bb.ref:instructions()) do
+            all_instructions[i] = {
+                id = i,
+                ref = inst,
+                usages = {}
+            }
+            auxmap[inst:pointer()] = all_instructions[i]
+            i = i + 1
+        end
+    end
+
+    -- mapping usages. where the result of the instruction is used as an argument
+    for _, inst in ipairs(all_instructions) do
+        for _, u in ipairs(inst.ref:usages()) do
+            local usage = auxmap[u]
+            table.insert(inst.usages, usage)
+        end
+    end
+
+    return all_instructions
+end
+
 -- puts the IR in true SSA form (withot useless alloca/store/load instructions)
 function fn:ssa(bbgraph)
-    bbgraph = bbgraph or self:bbgraph()
+    local bbgraph = bbgraph or self:bbgraph()
     -- TODO
     return bbgraph
 end
