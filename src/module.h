@@ -22,7 +22,7 @@
 #define _LLB_MODULE_H
 
 extern int module_new(lua_State*, LLVMModuleRef);
-extern int module_gc(lua_State*);
+extern int module_dispose(lua_State*);
 extern int module_pairs(lua_State*);
 extern int module_index(lua_State*);
 extern int module_tostring(lua_State*);

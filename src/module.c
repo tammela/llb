@@ -33,7 +33,7 @@ int module_new(lua_State* L, LLVMModuleRef module) {
     return 1;
 }
 
-int module_gc(lua_State* L) {
+int module_dispose(lua_State* L) {
     LLVMModuleRef module = getmodule(L);
     LLVMDisposeModule(module);
     return 0;

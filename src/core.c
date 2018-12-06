@@ -127,7 +127,7 @@ static int llb_write_bitcode(lua_State* L) {
 
 // clang-format off
 struct luaL_Reg module_mt[] = {
-    {"__gc", module_gc},
+    {"dispose", module_dispose},
     {"__index", module_index},
     {"__pairs", module_pairs},
     {"__tostring", module_tostring},
