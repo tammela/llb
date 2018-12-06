@@ -68,7 +68,7 @@ int instruction_usages(lua_State* L) {
     int i = 0;
     for (LLVMUseRef use = LLVMGetFirstUse(instruction); use != NULL;
          use = LLVMGetNextUse(use)) {
-        LLVMValueRef used_in = LLVMGetUsedValue(use);
+        LLVMValueRef used_in = LLVMGetUser(use);
         char* str = LLVMPrintValueToString(instruction);
         char* str2 = LLVMPrintValueToString(used_in);
         printf("%s: %s\n", str, str2);
