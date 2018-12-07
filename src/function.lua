@@ -148,8 +148,9 @@ function fn:map_instructions(bbgraph)
     local i = 1
     for _, bb in ipairs(bbgraph) do
         for _, inst in ipairs(bb.ref:instructions()) do
-            all_instructions[i] = {
+            all_instructions[inst] = {
                 id = i,
+                bb = bb,
                 ref = inst,
                 usages = {}
             }
