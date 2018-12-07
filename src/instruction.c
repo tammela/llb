@@ -69,9 +69,6 @@ int instruction_usages(lua_State* L) {
     for (LLVMUseRef use = LLVMGetFirstUse(instruction); use != NULL;
          use = LLVMGetNextUse(use)) {
         LLVMValueRef used_in = LLVMGetUser(use);
-        char* str = LLVMPrintValueToString(instruction);
-        char* str2 = LLVMPrintValueToString(used_in);
-        printf("%s: %s\n", str, str2);
         lua_pushlightuserdata(L, used_in);
         lua_seti(L, -2, i + 1);
         i++;
