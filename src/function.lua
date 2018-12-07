@@ -159,7 +159,8 @@ function fn:map_instructions(bbgraph)
         end
     end
 
-    -- mapping usages. where the result of the instruction is used as an argument
+    -- mapping usages.
+    -- where the result of the instruction is used as an argument
     for _, inst in ipairs(all_instructions) do
         for _, u in ipairs(inst.ref:usages()) do
             local usage = auxmap[u]
