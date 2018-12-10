@@ -86,17 +86,17 @@ function fn:domtree(bbgraph)
 
     local all = set.new(table.unpack(bbgraph))
     local entry = bbgraph[1] -- TODO: is the entry bb always bbgraph[1]?
-    local regularnodes = all - {entry}
+    local regular_nodes = all - {entry}
     local dom = {} -- {node: set<node>}
 
     dom[entry] = set.new(entry)
-    for n in pairs(regularnodes) do
+    for n in pairs(regular_nodes) do
         dom[n] = all
     end
 
     repeat
         local change = false
-        for n in pairs(regularnodes) do
+        for n in pairs(regular_nodes) do
             local D = all
             for p in pairs(n.predecessors) do
                 D = D * dom[p]
@@ -119,14 +119,14 @@ function fn:idomtree(bbgraph)
 
     local all = set.new(table.unpack(bbgraph))
     local entry = bbgraph[1] -- TODO: is the entry bb always bbgraph[1]?
-    local regularnodes = all - {entry}
+    local regular_nodes = all - {entry}
     local idom = {}
 
-    for n in pairs(regularnodes) do
+    for n in pairs(all) do
         idom[n] = dom[n] - {n}
     end
 
-    for n in pairs(regularnodes) do
+    for n in pairs(regular_nodes) do
         for s in pairs(idom[n]) do
             for t in pairs(idom[n] - {s}) do
                 if idom[s]:contains(t) then
@@ -135,6 +135,8 @@ function fn:idomtree(bbgraph)
             end
         end
     end
+
+    idom[entry] = nil
 
     return idom
 end
@@ -174,7 +176,10 @@ end
 -- puts the IR in true SSA form (withot useless alloca/store/load instructions)
 function fn:ssa(bbgraph)
     local bbgraph = bbgraph or self:bbgraph()
-    -- TODO
+    -- TODO Complete this function
+
+    local all_instructions = self:map_instructions(bbgraph)
+
     return bbgraph
 end
 
