@@ -26,6 +26,9 @@ extern int instruction_pointer(lua_State*);
 extern int instruction_label(lua_State*);
 extern int instruction_operands(lua_State*);
 extern int instruction_usages(lua_State*);
+extern int instruction_is_alloca(lua_State*);
+extern int instruction_is_store(lua_State*);
+extern int instruction_is_load(lua_State*);
 extern int instruction_tostring(lua_State*);
 
 #endif

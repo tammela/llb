@@ -153,6 +153,9 @@ struct luaL_Reg inst_mt[] = {
     {"pointer", instruction_pointer},
     {"operands", instruction_operands},
     {"usages", instruction_usages},
+    {"is_alloca", instruction_is_alloca},
+    {"is_store", instruction_is_store},
+    {"is_load", instruction_is_load},
     {"__tostring", instruction_tostring},
     {NULL, NULL}
 };

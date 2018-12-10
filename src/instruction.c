@@ -77,6 +77,42 @@ int instruction_usages(lua_State* L) {
     return 1;
 }
 
+int instruction_is_alloca(lua_State* L) {
+    LLVMValueRef instruction = getinstruction(L);
+
+    if (LLVMIsAAllocaInst(instruction)) {
+        lua_pushboolean(L, 1);
+    } else {
+        lua_pushboolean(L, 0);
+    }
+
+    return 1;
+}
+
+int instruction_is_store(lua_State* L) {
+    LLVMValueRef instruction = getinstruction(L);
+
+    if (LLVMIsAStoreInst(instruction)) {
+        lua_pushboolean(L, 1);
+    } else {
+        lua_pushboolean(L, 0);
+    }
+
+    return 1;
+}
+
+int instruction_is_load(lua_State* L) {
+    LLVMValueRef instruction = getinstruction(L);
+
+    if (LLVMIsALoadInst(instruction)) {
+        lua_pushboolean(L, 1);
+    } else {
+        lua_pushboolean(L, 0);
+    }
+
+    return 1;
+}
+
 int instruction_tostring(lua_State* L) {
     LLVMValueRef instruction = getinstruction(L);
     char* str = LLVMPrintValueToString(instruction);
