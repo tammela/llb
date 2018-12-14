@@ -156,14 +156,14 @@ function fn:map_instructions(bbgraph)
                 ref = inst,
                 usages = {}
             }
-            auxmap[inst:pointer()] = all_instructions[i]
+            auxmap[inst:pointer()] = all_instructions[inst]
             i = i + 1
         end
     end
 
     -- mapping usages.
     -- where the result of the instruction is used as an argument
-    for _, inst in ipairs(all_instructions) do
+    for _, inst in pairs(all_instructions) do
         for _, u in ipairs(inst.ref:usages()) do
             local usage = auxmap[u]
             table.insert(inst.usages, usage)
