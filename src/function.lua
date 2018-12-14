@@ -173,12 +173,108 @@ function fn:map_instructions(bbgraph)
     return all_instructions
 end
 
+local function ridom(idomtree)
+    local r = {}
+    for node, dominated in pairs(idomtree) do
+        if r[node] == nil then
+            r[node] = {}
+        end
+        for d in pairs(dominated) do
+            if r[d] == nil then
+                r[d] = {}
+            end
+            table.insert(r[d], node)
+        end
+    end
+
+    print('----------------ridom')
+    for k, v in pairs(r) do
+        print('->', k.ref)
+        for i, j in pairs(v) do
+            print('-->', j.ref)
+        end
+    end
+    print('----------------ridom')
+
+    return r
+end
+
+local function append(t, ...)
+    for _, v in pairs(...) do
+        table.insert(t, v)
+    end
+end
+
+local function idom_post_order_traversal(node, ridom)
+    local t = {}
+    print('->', #ridom[node], node.ref)
+    if #ridom[node] == 0 then
+        print('returning')
+        return {node}
+    end
+    print('===', ridom[node][1].ref)
+    for _, successor in pairs(ridom[node]) do
+        local x0 = idom_post_order_traversal(successor, ridom)
+        append(t, table.unpack(x0))
+    end
+    return t
+end
+
+function fn:dominance_frontier()
+    local bbgraph = bbgraph or self:bbgraph()
+    local idom = self:idomtree(bbgraph)
+    local ridom = ridom(idom)
+
+    -- IDom, Succ, Pred:  Node — > set of Node
+    --
+    -- procedure Dom_Front(N,E,r)  returns Node — > set of Node
+    --     N: in set of Node
+    --     E: in set of  (Node x Node)
+    --     r: in Node
+    -- begin
+    --     y, z:  Node
+    --     P: sequence of Node
+    --     i:  integer
+    --     DF:  Node -> set of Node
+    --     Domin.Fast(N,r,IDom)
+    --     P  := Post_Order(N,IDom)
+    --     for i  := 1 to  IPI  do
+    --         DF(Pli) := 0
+    --         ||  compute local component
+    --         for each y e Succ(Pli)  do
+    --             if y !E IDom(Pli) then
+    --                 DF(Pli) u= {y}
+    --             fi
+    --         od
+    --         ||  add on up component
+    --         for each z e IDom(Pli) do
+    --             for each y e DF(z) do
+    --                 if y £ IDom(Pli) then
+    --                     DF(Pli) u= {y}
+    --                 fi
+    --             od
+    --         od
+    --     od
+    --     return DF
+    -- end    I|  Dom_Front
+
+    return idom_post_order_traversal(bbgraph[1], ridom)
+end
+
 -- puts the IR in true SSA form (withot useless alloca/store/load instructions)
 function fn:ssa(bbgraph)
     local bbgraph = bbgraph or self:bbgraph()
     -- TODO Complete this function
 
     local all_instructions = self:map_instructions(bbgraph)
+    for _, inst in pairs(all_instructions) do
+        if inst.ref:is_alloca() then
+            print("-> ", inst.ref, inst.ref:is_alloca())
+            for k, usage in pairs(inst.usages) do
+                print('-->', usage.ref, usage.ref:is_store())
+            end
+        end
+    end
 
     return bbgraph
 end
