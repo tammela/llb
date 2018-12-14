@@ -77,6 +77,27 @@ do -- add & remove
     assert(s:contains("c") and not s["a"] and not s["b"] and not s["d"])
 end
 
+do -- pop
+    local s = set.new()
+
+    -- empty
+    assert(s:pop() == nil)
+
+    -- one
+    s:add("a")
+    assert(s:pop() == "a")
+    assert(s:size() == 0)
+
+    -- many
+    s:add("b", "c", "d")
+    local e = s:pop()
+    assert(s:size() == 2)
+    assert(e == "b" or e == "c" or e == "d")
+    s:pop()
+    s:pop()
+    assert(s:size() == 0)
+end
+
 -- is_empty & size & contains (tested above)
 
 do -- __tostring

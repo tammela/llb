@@ -48,6 +48,13 @@ function set:remove(...)
     end
 end
 
+function set:pop()
+    for _, v in pairs(self) do
+        self:remove(v)
+        return v
+    end
+end
+
 function set:is_empty()
     return next(self) == nil
 end
