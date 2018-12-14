@@ -138,6 +138,10 @@ function fn:idomtree(bbgraph)
 
     idom[entry] = nil
 
+    for k, v in pairs(idom) do
+        idom[k] = v:pop()
+    end
+
     return idom
 end
 
