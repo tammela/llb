@@ -80,9 +80,9 @@ do -- idomtree
     local bb = bbgraphmap(bbgraph)
 
     assert(idomtree[bb.entry] == nil) -- TODO: perhaps {entry = {}} ?
-    assert(idomtree[bb.l1] == set.new(bb.entry))
-    assert(idomtree[bb.l2] == set.new(bb.entry))
-    assert(idomtree[bb.l3] == set.new(bb.entry))
+    assert(idomtree[bb.l1] == bb.entry)
+    assert(idomtree[bb.l2] == bb.entry)
+    assert(idomtree[bb.l3] == bb.entry)
 end
 
 testing.ok()
