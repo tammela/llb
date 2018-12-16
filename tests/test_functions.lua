@@ -155,4 +155,25 @@ do -- df
     assert(df[bb.exit]:is_empty())
 end
 
+do -- dfplus
+    local bbgraph = main:bbgraph()
+    local bb = bbgraphmap(bbgraph)
+
+    -- a
+    local dfp_a = main:dfplus(bbgraph, set.new(bb.entry))
+    assert(dfp_a:is_empty())
+
+    -- x
+    local dfp_x = main:dfplus(bbgraph, set.new(bb.b2, bb.b3))
+    assert(dfp_x == set.new(bb.b5, bb.exit))
+
+    -- y
+    local dfp_y = main:dfplus(bbgraph, set.new(bb.b4))
+    assert(dfp_y == set.new(bb.exit))
+
+    -- z
+    local dfp_z = main:dfplus(bbgraph, set.new(bb.b1, bb.b5, bb.b6))
+    assert(dfp_z == set.new(bb.exit))
+end
+
 testing.ok()

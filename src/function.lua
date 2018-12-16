@@ -80,7 +80,7 @@ function fn:bbgraph()
     return nodes
 end
 
--- computes the dominators of all basic blocks in a function
+-- computes the dominators of basic blocks in a function
 function fn:domtree(bbgraph)
     local bbgraph = bbgraph or self:bbgraph()
 
@@ -174,7 +174,7 @@ function fn:ridomtree(bbgraph)
 end
 
 -- FIXME: this is the quadratic version
--- computes the dominance frontier of all basic blocks in a function
+-- computes the dominance frontier of basic blocks in a function
 function fn:df(bbgraph)
     local bbgraph = bbgraph or self:bbgraph()
     local dom = self:domtree(bbgraph)
@@ -198,6 +198,44 @@ function fn:df(bbgraph)
     end
 
     return df
+end
+
+-- computes the iterated dominance frontier (DF+) of nodes in S
+-- "if S is the set of nodes that assign to variable x then DF+(S) is exactly
+-- the set of nodes that need phi-functions for x"
+function fn:dfplus(bbgraph, s)
+    local s = s:copy()
+    s:add(bbgraph[1])
+
+    local bbgraph = bbgraph or self:bbgraph()
+    local df = self:df(bbgraph)
+
+    local function dfunion(s)
+        local dfu = set.new()
+        for x in pairs(s) do
+            dfu = dfu + df[x]
+        end
+        return dfu
+    end
+
+    -- S = bbgraph
+    -- DF(S) = U[x E S] DF(x)
+    local dfs = dfunion(s)
+
+    -- DF[1](S) = DF(S)
+    -- DF[i+1](S) = DF(S U DF[i](S))
+    -- DF+(S) = lim[i to infinity] DF[i](S)
+    local dfp = dfs
+    repeat
+        local change = false
+        local D = dfunion(s + dfp)
+        if D ~= dfp then
+            dfp = D
+            change = true
+        end
+    until not change
+
+    return dfp
 end
 
 -- function fn:map_instructions(bbgraph)
