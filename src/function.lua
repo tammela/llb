@@ -140,147 +140,182 @@ function fn:idomtree(bbgraph)
 
     for k, v in pairs(idom) do
         idom[k] = v:pop()
+        assert(v:is_empty())
     end
 
     return idom
 end
 
-function fn:map_instructions(bbgraph)
-    local bbgraph = bbgraph or self:bbgraph()
-    local all_instructions = {}
-    local auxmap = {}
-
-    -- getting all instructions
-    local i = 1
-    for _, bb in ipairs(bbgraph) do
-        for _, inst in ipairs(bb.ref:instructions()) do
-            all_instructions[inst] = {
-                id = i,
-                bb = bb,
-                ref = inst,
-                usages = {}
-            }
-            auxmap[inst:pointer()] = all_instructions[inst]
-            i = i + 1
-        end
-    end
-
-    -- mapping usages.
-    -- where the result of the instruction is used as an argument
-    for _, inst in pairs(all_instructions) do
-        for _, u in ipairs(inst.ref:usages()) do
-            local usage = auxmap[u]
-            table.insert(inst.usages, usage)
-        end
-    end
-
-    return all_instructions
-end
-
-local function ridom(idomtree)
-    local r = {}
-    for node, dominated in pairs(idomtree) do
-        if r[node] == nil then
-            r[node] = {}
-        end
-        for d in pairs(dominated) do
-            if r[d] == nil then
-                r[d] = {}
-            end
-            table.insert(r[d], node)
-        end
-    end
-
-    print('----------------ridom')
-    for k, v in pairs(r) do
-        print('->', k.ref)
-        for i, j in pairs(v) do
-            print('-->', j.ref)
-        end
-    end
-    print('----------------ridom')
-
-    return r
-end
-
-local function append(t, ...)
-    for _, v in pairs(...) do
-        table.insert(t, v)
-    end
-end
-
-local function idom_post_order_traversal(node, ridom)
-    local t = {}
-    print('->', #ridom[node], node.ref)
-    if #ridom[node] == 0 then
-        print('returning')
-        return {node}
-    end
-    print('===', ridom[node][1].ref)
-    for _, successor in pairs(ridom[node]) do
-        local x0 = idom_post_order_traversal(successor, ridom)
-        append(t, table.unpack(x0))
-    end
-    return t
-end
-
-function fn:dominance_frontier()
+-- reverse idomtree
+function fn:ridomtree(bbgraph)
     local bbgraph = bbgraph or self:bbgraph()
     local idom = self:idomtree(bbgraph)
-    local ridom = ridom(idom)
+    local ridom = {}
 
-    -- IDom, Succ, Pred:  Node — > set of Node
-    --
-    -- procedure Dom_Front(N,E,r)  returns Node — > set of Node
-    --     N: in set of Node
-    --     E: in set of  (Node x Node)
-    --     r: in Node
-    -- begin
-    --     y, z:  Node
-    --     P: sequence of Node
-    --     i:  integer
-    --     DF:  Node -> set of Node
-    --     Domin.Fast(N,r,IDom)
-    --     P  := Post_Order(N,IDom)
-    --     for i  := 1 to  IPI  do
-    --         DF(Pli) := 0
-    --         ||  compute local component
-    --         for each y e Succ(Pli)  do
-    --             if y !E IDom(Pli) then
-    --                 DF(Pli) u= {y}
-    --             fi
-    --         od
-    --         ||  add on up component
-    --         for each z e IDom(Pli) do
-    --             for each y e DF(z) do
-    --                 if y £ IDom(Pli) then
-    --                     DF(Pli) u= {y}
-    --                 fi
-    --             od
-    --         od
-    --     od
-    --     return DF
-    -- end    I|  Dom_Front
-
-    return idom_post_order_traversal(bbgraph[1], ridom)
-end
-
--- puts the IR in true SSA form (withot useless alloca/store/load instructions)
-function fn:ssa(bbgraph)
-    local bbgraph = bbgraph or self:bbgraph()
-    -- TODO Complete this function
-
-    local all_instructions = self:map_instructions(bbgraph)
-    for _, inst in pairs(all_instructions) do
-        if inst.ref:is_alloca() then
-            print("-> ", inst.ref, inst.ref:is_alloca())
-            for k, usage in pairs(inst.usages) do
-                print('-->', usage.ref, usage.ref:is_store())
-            end
-        end
+    for _, v in ipairs(bbgraph) do
+        ridom[v] = set.new()
     end
 
-    return bbgraph
+    for k, v in pairs(idom) do
+        ridom[v]:add(k)
+    end
+
+    return ridom
 end
+
+-- function fn:map_instructions(bbgraph)
+--     local bbgraph = bbgraph or self:bbgraph()
+--     local all_instructions = {}
+--     local auxmap = {}
+
+--     -- getting all instructions
+--     local i = 1
+--     for _, bb in ipairs(bbgraph) do
+--         for _, inst in ipairs(bb.ref:instructions()) do
+--             all_instructions[inst] = {
+--                 id = i,
+--                 bb = bb,
+--                 ref = inst,
+--                 usages = {}
+--             }
+--             auxmap[inst:pointer()] = all_instructions[inst]
+--             i = i + 1
+--         end
+--     end
+
+--     -- mapping usages.
+--     -- where the result of the instruction is used as an argument
+--     for _, inst in pairs(all_instructions) do
+--         for _, u in ipairs(inst.ref:usages()) do
+--             local usage = auxmap[u]
+--             table.insert(inst.usages, usage)
+--         end
+--     end
+
+--     return all_instructions
+-- end
+
+-- local function append(t, ...)
+--     for _, v in pairs(...) do
+--         table.insert(t, v)
+--     end
+-- end
+
+-- local function idom_post_order_traversal(node, ridom)
+--     local t = {}
+--     print('->', #ridom[node], node.ref)
+--     if #ridom[node] == 0 then
+--         print('returning')
+--         return {node}
+--     end
+--     print('===', ridom[node][1].ref)
+--     for _, successor in pairs(ridom[node]) do
+--         local x0 = idom_post_order_traversal(successor, ridom)
+--         append(t, table.unpack(x0))
+--     end
+--     return t
+-- end
+
+-- function fn:dominance_frontier()
+--     local bbgraph = bbgraph or self:bbgraph()
+--     local idom = self:idomtree(bbgraph)
+--     local ridom = ridom(idom)
+
+--     -- IDom, Succ, Pred:  Node — > set of Node
+--     --
+--     -- procedure Dom_Front(N,E,r)  returns Node — > set of Node
+--     --     N: in set of Node
+--     --     E: in set of  (Node x Node)
+--     --     r: in Node
+--     -- begin
+--     --     y, z:  Node
+--     --     P: sequence of Node
+--     --     i:  integer
+--     --     DF:  Node -> set of Node
+--     --     Domin.Fast(N,r,IDom)
+--     --     P  := Post_Order(N,IDom)
+--     --     for i  := 1 to  IPI  do
+--     --         DF(Pli) := 0
+--     --         ||  compute local component
+--     --         for each y e Succ(Pli)  do
+--     --             if y !E IDom(Pli) then
+--     --                 DF(Pli) u= {y}
+--     --             fi
+--     --         od
+--     --         ||  add on up component
+--     --         for each z e IDom(Pli) do
+--     --             for each y e DF(z) do
+--     --                 if y £ IDom(Pli) then
+--     --                     DF(Pli) u= {y}
+--     --                 fi
+--     --             od
+--     --         od
+--     --     od
+--     --     return DF
+--     -- end    I|  Dom_Front
+
+--     return idom_post_order_traversal(bbgraph[1], ridom)
+-- end
+
+-- -- puts the IR in true SSA form (withot useless alloca/store/load instructions)
+-- function fn:ssa(bbgraph)
+--     local bbgraph = bbgraph or self:bbgraph()
+--     -- TODO Complete this function
+
+--     local all_instructions = self:map_instructions(bbgraph)
+--     for _, inst in pairs(all_instructions) do
+--         if inst.ref:is_alloca() then
+--             print("-> ", inst.ref, inst.ref:is_alloca())
+--             for k, usage in pairs(inst.usages) do
+--                 print('-->', usage.ref, usage.ref:is_store())
+--             end
+--         end
+--     end
+
+--     return bbgraph
+-- end
+
+-----------------------------------------------------
+--
+--  dominance frontier
+--
+-----------------------------------------------------
+
+-- df, df_up = nil, nil
+
+-- -- df_up(x, z) = {y E df(z) | idom(z) == x and idom(y) != x}
+-- function df_up(x, z)
+--     local s = set.new()
+--     for y in pairs(df(z)) do
+--         if idom(z) ~= x and idom(y) ~= x then
+--             s:add(y)
+--         end
+--     end
+--     return s
+-- end
+
+-- function df(x, bbgraph, idom)
+--     -- df_local(x) = {y E Succ(x) | idom(y) != x}
+--     function df_local(x)
+--         local s = set.new()
+--         for y in pairs(x.successors) do
+--             if idom[y] ~= x then
+--                 s:add(y)
+--             end
+--         end
+--         return s
+--     end
+
+--     local dfup, df
+
+--     -- df(x) = dflocal(x) union U[z E N (idom(z) == x)] dfup(x, z)
+--     local U = set.new()
+--     for _, z in ipairs(bbgraph) do
+--         if idom[z.ref] == x then
+--             U = U + df_up(x, z.ref)
+--         end
+--     end
+--     return df_local(x) + U
+-- end
 
 return fn
