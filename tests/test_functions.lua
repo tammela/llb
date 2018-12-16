@@ -95,6 +95,21 @@ do -- domtree
     assert(dom[bb.exit] == set.new(bb.entry, bb.b1, bb.exit))
 end
 
+do -- sdomtree
+    local bbgraph = main:bbgraph()
+    local sdom = main:sdomtree(bbgraph)
+    local bb = bbgraphmap(bbgraph)
+
+    assert(sdom[bb.entry]:is_empty())
+    assert(sdom[bb.b1] == set.new(bb.entry))
+    assert(sdom[bb.b2] == set.new(bb.entry, bb.b1))
+    assert(sdom[bb.b3] == set.new(bb.entry, bb.b1))
+    assert(sdom[bb.b4] == set.new(bb.entry, bb.b1, bb.b2))
+    assert(sdom[bb.b5] == set.new(bb.entry, bb.b1))
+    assert(sdom[bb.b6] == set.new(bb.entry, bb.b1, bb.b5))
+    assert(sdom[bb.exit] == set.new(bb.entry, bb.b1))
+end
+
 do -- idomtree
     local bbgraph = main:bbgraph()
     local idom = main:idomtree(bbgraph)
@@ -125,14 +140,19 @@ do -- ridomtree
     assert(ridom[bb.exit]:is_empty())
 end
 
--- do -- dflocal, dfup, df
---     local bbgraph = main:bbgraph()
---     local idomtree = main:idomtree(bbgraph)
---     local bb = bbgraphmap(bbgraph)
+do -- df
+    local bbgraph = main:bbgraph()
+    local df = main:df(bbgraph)
+    local bb = bbgraphmap(bbgraph)
 
-    
---     local df = df(bb.x, bbgraph, idomtree)
---     print(df)
--- end
+    assert(df[bb.entry]:is_empty())
+    assert(df[bb.b1]:is_empty())
+    assert(df[bb.b2] == set.new(bb.b5, bb.exit))
+    assert(df[bb.b3] == set.new(bb.b5))
+    assert(df[bb.b4] == set.new(bb.exit))
+    assert(df[bb.b5] == set.new(bb.exit))
+    assert(df[bb.b6] == set.new(bb.exit))
+    assert(df[bb.exit]:is_empty())
+end
 
 testing.ok()

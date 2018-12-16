@@ -80,7 +80,7 @@ function fn:bbgraph()
     return nodes
 end
 
--- computes the dominance tree of a function
+-- computes the dominators of all basic blocks in a function
 function fn:domtree(bbgraph)
     local bbgraph = bbgraph or self:bbgraph()
 
@@ -110,6 +110,16 @@ function fn:domtree(bbgraph)
     until not change
 
     return dom
+end
+
+-- computes the strict dominance tree of a function
+function fn:sdomtree(bbgraph)
+    local bbgraph = bbgraph or self:bbgraph()
+    local sdom = self:domtree(bbgraph)
+    for k, v in pairs(sdom) do
+        v:remove(k)
+    end
+    return sdom
 end
 
 -- computes the imediate dominance tree of a function
@@ -161,6 +171,35 @@ function fn:ridomtree(bbgraph)
     end
 
     return ridom
+end
+
+-- computes the dominance frontier of all basic blocks in a function
+function fn:df(bbgraph)
+    local bbgraph = bbgraph or self:bbgraph()
+    local dom = self:domtree(bbgraph)
+    local sdom = self:sdomtree(bbgraph)
+    local df = {}
+
+    -- FIXME: this is the quadratic version
+
+    -- df(x) = {y | (exists z E predecessors(y) | dom[z] contains x) and
+    --              (sdom[y] !contains x)}
+    
+    for _, x in ipairs(bbgraph) do
+        df[x] = set.new()
+    end
+
+    for _, x in ipairs(bbgraph) do
+        for _, y in ipairs(bbgraph) do
+            for z in pairs(y.predecessors) do
+                if dom[z]:contains(x) and not sdom[y]:contains(x) then
+                    df[x]:add(y)
+                end
+            end
+        end
+    end
+
+    return df
 end
 
 -- function fn:map_instructions(bbgraph)
@@ -281,12 +320,26 @@ end
 --
 -----------------------------------------------------
 
--- df, df_up = nil, nil
+-- local df, dflocal, dfup
 
--- -- df_up(x, z) = {y E df(z) | idom(z) == x and idom(y) != x}
--- function df_up(x, z)
+-- -- dflocal(x) = {y E successors(x) | ridom(y) != x}
+-- local function dflocal(bbgraph, idom)
+--     local t = {}
+--     for _, x in ipairs(bbgraph) do
+--         t[x] = set.new()
+--         for y in pairs(x.successors) do
+--             if idom[y] ~= x then
+--                 t[x]:add(y)
+--             end
+--         end
+--     end
+--     return t
+-- end
+
+-- -- dfup(x, z) = {y E df(z) | idom(z) == x and idom(y) != x}
+-- local function dfup(x, z)
 --     local s = set.new()
---     for y in pairs(df(z)) do
+--     for y in pairs(fn.df(nil, z)) do
 --         if idom(z) ~= x and idom(y) ~= x then
 --             s:add(y)
 --         end
@@ -294,28 +347,28 @@ end
 --     return s
 -- end
 
--- function df(x, bbgraph, idom)
---     -- df_local(x) = {y E Succ(x) | idom(y) != x}
---     function df_local(x)
---         local s = set.new()
---         for y in pairs(x.successors) do
---             if idom[y] ~= x then
---                 s:add(y)
---             end
---         end
---         return s
---     end
-
---     local dfup, df
-
---     -- df(x) = dflocal(x) union U[z E N (idom(z) == x)] dfup(x, z)
+-- -- df(x) = dflocal(x) union U[z E N (idom(z) == x)] dfup(x, z)
+-- local function df(bbgraph, idom, dflocal, x)
 --     local U = set.new()
 --     for _, z in ipairs(bbgraph) do
 --         if idom[z.ref] == x then
---             U = U + df_up(x, z.ref)
+--             U = U + dfup(x, z.ref)
 --         end
 --     end
---     return df_local(x) + U
+--     return dflocal[x] + U
+-- end
+
+-- function fn:df(bbgraph)
+--     local bbgraph = bbgraph or self:bbgraph()
+--     local idom = self:idomtree(bbgraph)
+
+--     local dflocal = dflocal(bbgraph, idom)
+
+--     local t = {}
+--     for _, x in ipairs(bbgraph) do
+--         t[x] = df(bbgraph, idom, dflocal, x)
+--     end
+--     return t
 -- end
 
 return fn
