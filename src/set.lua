@@ -36,6 +36,14 @@ function set.new(...)
     return t
 end
 
+function set:copy()
+    local t = set.new()
+    for e in pairs(self) do
+        t:add(e)
+    end
+    return t
+end
+
 function set:add(...)
     for _, e in ipairs({...}) do
         self[e] = e
