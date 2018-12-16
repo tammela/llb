@@ -82,32 +82,47 @@ end
 
 do -- domtree
     local bbgraph = main:bbgraph()
-    local domtree = main:domtree(bbgraph)
+    local dom = main:domtree(bbgraph)
     local bb = bbgraphmap(bbgraph)
 
-    assert(domtree[bb.entry] == set.new(bb.entry))
-    assert(domtree[bb.b1] == set.new(bb.entry, bb.b1))
-    assert(domtree[bb.b2] == set.new(bb.entry, bb.b1, bb.b2))
-    assert(domtree[bb.b3] == set.new(bb.entry, bb.b1, bb.b3))
-    assert(domtree[bb.b4] == set.new(bb.entry, bb.b1, bb.b2, bb.b4))
-    assert(domtree[bb.b5] == set.new(bb.entry, bb.b1, bb.b5))
-    assert(domtree[bb.b6] == set.new(bb.entry, bb.b1, bb.b5, bb.b6))
-    assert(domtree[bb.exit] == set.new(bb.entry, bb.b1, bb.exit))
+    assert(dom[bb.entry] == set.new(bb.entry))
+    assert(dom[bb.b1] == set.new(bb.entry, bb.b1))
+    assert(dom[bb.b2] == set.new(bb.entry, bb.b1, bb.b2))
+    assert(dom[bb.b3] == set.new(bb.entry, bb.b1, bb.b3))
+    assert(dom[bb.b4] == set.new(bb.entry, bb.b1, bb.b2, bb.b4))
+    assert(dom[bb.b5] == set.new(bb.entry, bb.b1, bb.b5))
+    assert(dom[bb.b6] == set.new(bb.entry, bb.b1, bb.b5, bb.b6))
+    assert(dom[bb.exit] == set.new(bb.entry, bb.b1, bb.exit))
 end
 
 do -- idomtree
     local bbgraph = main:bbgraph()
-    local idomtree = main:idomtree(bbgraph)
+    local idom = main:idomtree(bbgraph)
     local bb = bbgraphmap(bbgraph)
 
-    assert(idomtree[bb.entry] == nil)
-    assert(idomtree[bb.b1] == bb.entry)
-    assert(idomtree[bb.b2] == bb.b1)
-    assert(idomtree[bb.b3] == bb.b1)
-    assert(idomtree[bb.b4] == bb.b2)
-    assert(idomtree[bb.b5] == bb.b1)
-    assert(idomtree[bb.b6] == bb.b5)
-    assert(idomtree[bb.exit] == bb.b1)
+    assert(idom[bb.entry] == nil)
+    assert(idom[bb.b1] == bb.entry)
+    assert(idom[bb.b2] == bb.b1)
+    assert(idom[bb.b3] == bb.b1)
+    assert(idom[bb.b4] == bb.b2)
+    assert(idom[bb.b5] == bb.b1)
+    assert(idom[bb.b6] == bb.b5)
+    assert(idom[bb.exit] == bb.b1)
+end
+
+do -- ridomtree
+    local bbgraph = main:bbgraph()
+    local ridom = main:ridomtree(bbgraph)
+    local bb = bbgraphmap(bbgraph)
+
+    assert(ridom[bb.entry] == set.new(bb.b1))
+    assert(ridom[bb.b1] == set.new(bb.b2, bb.b3, bb.b5, bb.exit))
+    assert(ridom[bb.b2] == set.new(bb.b4))
+    assert(ridom[bb.b3]:is_empty())
+    assert(ridom[bb.b4]:is_empty())
+    assert(ridom[bb.b5] == set.new(bb.b6))
+    assert(ridom[bb.b6]:is_empty())
+    assert(ridom[bb.exit]:is_empty())
 end
 
 -- do -- dflocal, dfup, df
@@ -116,8 +131,8 @@ end
 --     local bb = bbgraphmap(bbgraph)
 
     
---     local dflx = dflocal(bb.entry, idomtree)
---     print(dflx)
+--     local df = df(bb.x, bbgraph, idomtree)
+--     print(df)
 -- end
 
 testing.ok()
