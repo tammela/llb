@@ -42,6 +42,40 @@ do -- new
     end
 end
 
+do -- copy
+    do -- empty
+        local s = set.new()
+        local copy = s:copy()
+        assert(copy == s)
+
+        s:add(1)
+        assert(not s:is_empty())
+        assert(copy:is_empty())
+    end
+
+    do -- one
+        local s = set.new(1)
+        local copy = s:copy()
+        assert(copy == s)
+
+        s:pop()
+        assert(s:is_empty())
+        assert(not copy:is_empty())
+    end
+
+    do -- many
+        local s = set.new(1, 2, 3)
+        local copy = s:copy()
+        assert(copy == s)
+
+        local anothercopy = s:copy()
+        s:pop()
+        assert(copy ~= s)
+        assert(copy == anothercopy)
+        assert(copy == set.new(1, 2, 3))
+    end
+end
+
 do -- add & remove
     local s = set.new()
 

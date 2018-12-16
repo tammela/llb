@@ -9,7 +9,6 @@ all: bugs tests
 bugs:
 	$(TEST) gc.lua
 
-
 tests:
 	$(TEST) test_set.lua
 	$(TEST) test_functions.lua
