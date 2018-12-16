@@ -173,22 +173,20 @@ function fn:ridomtree(bbgraph)
     return ridom
 end
 
+-- FIXME: this is the quadratic version
 -- computes the dominance frontier of all basic blocks in a function
 function fn:df(bbgraph)
     local bbgraph = bbgraph or self:bbgraph()
     local dom = self:domtree(bbgraph)
     local sdom = self:sdomtree(bbgraph)
+
     local df = {}
 
-    -- FIXME: this is the quadratic version
-
-    -- df(x) = {y | (exists z E predecessors(y) | dom[z] contains x) and
-    --              (sdom[y] !contains x)}
-    
     for _, x in ipairs(bbgraph) do
         df[x] = set.new()
     end
 
+    -- df(x) = {y | (z E predecessors(y) | x C dom[z]) and (x !C sdom[y])}
     for _, x in ipairs(bbgraph) do
         for _, y in ipairs(bbgraph) do
             for z in pairs(y.predecessors) do
@@ -234,68 +232,6 @@ end
 --     return all_instructions
 -- end
 
--- local function append(t, ...)
---     for _, v in pairs(...) do
---         table.insert(t, v)
---     end
--- end
-
--- local function idom_post_order_traversal(node, ridom)
---     local t = {}
---     print('->', #ridom[node], node.ref)
---     if #ridom[node] == 0 then
---         print('returning')
---         return {node}
---     end
---     print('===', ridom[node][1].ref)
---     for _, successor in pairs(ridom[node]) do
---         local x0 = idom_post_order_traversal(successor, ridom)
---         append(t, table.unpack(x0))
---     end
---     return t
--- end
-
--- function fn:dominance_frontier()
---     local bbgraph = bbgraph or self:bbgraph()
---     local idom = self:idomtree(bbgraph)
---     local ridom = ridom(idom)
-
---     -- IDom, Succ, Pred:  Node — > set of Node
---     --
---     -- procedure Dom_Front(N,E,r)  returns Node — > set of Node
---     --     N: in set of Node
---     --     E: in set of  (Node x Node)
---     --     r: in Node
---     -- begin
---     --     y, z:  Node
---     --     P: sequence of Node
---     --     i:  integer
---     --     DF:  Node -> set of Node
---     --     Domin.Fast(N,r,IDom)
---     --     P  := Post_Order(N,IDom)
---     --     for i  := 1 to  IPI  do
---     --         DF(Pli) := 0
---     --         ||  compute local component
---     --         for each y e Succ(Pli)  do
---     --             if y !E IDom(Pli) then
---     --                 DF(Pli) u= {y}
---     --             fi
---     --         od
---     --         ||  add on up component
---     --         for each z e IDom(Pli) do
---     --             for each y e DF(z) do
---     --                 if y £ IDom(Pli) then
---     --                     DF(Pli) u= {y}
---     --                 fi
---     --             od
---     --         od
---     --     od
---     --     return DF
---     -- end    I|  Dom_Front
-
---     return idom_post_order_traversal(bbgraph[1], ridom)
--- end
-
 -- -- puts the IR in true SSA form (withot useless alloca/store/load instructions)
 -- function fn:ssa(bbgraph)
 --     local bbgraph = bbgraph or self:bbgraph()
@@ -312,63 +248,6 @@ end
 --     end
 
 --     return bbgraph
--- end
-
------------------------------------------------------
---
---  dominance frontier
---
------------------------------------------------------
-
--- local df, dflocal, dfup
-
--- -- dflocal(x) = {y E successors(x) | ridom(y) != x}
--- local function dflocal(bbgraph, idom)
---     local t = {}
---     for _, x in ipairs(bbgraph) do
---         t[x] = set.new()
---         for y in pairs(x.successors) do
---             if idom[y] ~= x then
---                 t[x]:add(y)
---             end
---         end
---     end
---     return t
--- end
-
--- -- dfup(x, z) = {y E df(z) | idom(z) == x and idom(y) != x}
--- local function dfup(x, z)
---     local s = set.new()
---     for y in pairs(fn.df(nil, z)) do
---         if idom(z) ~= x and idom(y) ~= x then
---             s:add(y)
---         end
---     end
---     return s
--- end
-
--- -- df(x) = dflocal(x) union U[z E N (idom(z) == x)] dfup(x, z)
--- local function df(bbgraph, idom, dflocal, x)
---     local U = set.new()
---     for _, z in ipairs(bbgraph) do
---         if idom[z.ref] == x then
---             U = U + dfup(x, z.ref)
---         end
---     end
---     return dflocal[x] + U
--- end
-
--- function fn:df(bbgraph)
---     local bbgraph = bbgraph or self:bbgraph()
---     local idom = self:idomtree(bbgraph)
-
---     local dflocal = dflocal(bbgraph, idom)
-
---     local t = {}
---     for _, x in ipairs(bbgraph) do
---         t[x] = df(bbgraph, idom, dflocal, x)
---     end
---     return t
 -- end
 
 return fn
