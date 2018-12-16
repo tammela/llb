@@ -24,6 +24,7 @@ local set = require "set"
 
 testing.header("functions.lua")
 
+-- auxiliary
 local function bbgraphmap(bbgraph)
     local t = {}
     for _, bb in ipairs(bbgraph) do
@@ -32,7 +33,7 @@ local function bbgraphmap(bbgraph)
     return t
 end
 
-local functions = llb.load_ir("aux/simple.ll")
+local functions = llb.load_ir("aux/book.ll")
 assert(functions)
 local main = functions.main
 assert(main)
@@ -41,26 +42,42 @@ do -- bbgraph
     local bbgraph = main:bbgraph()
     assert(bbgraph)
     assert(type(bbgraph) == "table")
-    assert(#bbgraph == 4)
+    assert(#bbgraph == 8)
 
     local bb = bbgraphmap(bbgraph)
 
     -- entry
     assert(bbgraph[1] == bb.entry)
     assert(bb.entry.predecessors:is_empty())
-    assert(bb.entry.successors == set.new(bb.l1, bb.l2))
+    assert(bb.entry.successors == set.new(bb.b1))
 
-    -- l1
-    assert(bb.l1.predecessors == set.new(bb.entry))
-    assert(bb.l1.successors == set.new(bb.l3))
+    -- b1
+    assert(bb.b1.predecessors == set.new(bb.entry))
+    assert(bb.b1.successors == set.new(bb.b2, bb.b3))
 
-    -- l2
-    assert(bb.l2.predecessors == set.new(bb.entry))
-    assert(bb.l2.successors == set.new(bb.l3))
+    -- b2
+    assert(bb.b2.predecessors == set.new(bb.b1))
+    assert(bb.b2.successors == set.new(bb.b4, bb.b5))
 
-    -- l3
-    assert(bb.l3.predecessors == set.new(bb.l1, bb.l2))
-    assert(bb.l3.successors:is_empty())
+    -- b3
+    assert(bb.b3.predecessors == set.new(bb.b1))
+    assert(bb.b3.successors == set.new(bb.b5))
+
+    -- b4
+    assert(bb.b4.predecessors == set.new(bb.b2))
+    assert(bb.b4.successors == set.new(bb.exit))
+
+    -- b5
+    assert(bb.b5.predecessors == set.new(bb.b2, bb.b3))
+    assert(bb.b5.successors == set.new(bb.b6))
+
+    -- b6
+    assert(bb.b6.predecessors == set.new(bb.b5))
+    assert(bb.b6.successors == set.new(bb.exit))
+
+    -- exit
+    assert(bb.exit.predecessors == set.new(bb.b4, bb.b6))
+    assert(bb.exit.successors:is_empty())
 end
 
 do -- domtree
@@ -69,9 +86,13 @@ do -- domtree
     local bb = bbgraphmap(bbgraph)
 
     assert(domtree[bb.entry] == set.new(bb.entry))
-    assert(domtree[bb.l1] == set.new(bb.entry, bb.l1))
-    assert(domtree[bb.l2] == set.new(bb.entry, bb.l2))
-    assert(domtree[bb.l3] == set.new(bb.entry, bb.l3))
+    assert(domtree[bb.b1] == set.new(bb.entry, bb.b1))
+    assert(domtree[bb.b2] == set.new(bb.entry, bb.b1, bb.b2))
+    assert(domtree[bb.b3] == set.new(bb.entry, bb.b1, bb.b3))
+    assert(domtree[bb.b4] == set.new(bb.entry, bb.b1, bb.b2, bb.b4))
+    assert(domtree[bb.b5] == set.new(bb.entry, bb.b1, bb.b5))
+    assert(domtree[bb.b6] == set.new(bb.entry, bb.b1, bb.b5, bb.b6))
+    assert(domtree[bb.exit] == set.new(bb.entry, bb.b1, bb.exit))
 end
 
 do -- idomtree
@@ -79,19 +100,24 @@ do -- idomtree
     local idomtree = main:idomtree(bbgraph)
     local bb = bbgraphmap(bbgraph)
 
-    assert(idomtree[bb.entry] == nil) -- TODO: perhaps {entry = {}} ?
-    assert(idomtree[bb.l1] == bb.entry)
-    assert(idomtree[bb.l2] == bb.entry)
-    assert(idomtree[bb.l3] == bb.entry)
+    assert(idomtree[bb.entry] == nil)
+    assert(idomtree[bb.b1] == bb.entry)
+    assert(idomtree[bb.b2] == bb.b1)
+    assert(idomtree[bb.b3] == bb.b1)
+    assert(idomtree[bb.b4] == bb.b2)
+    assert(idomtree[bb.b5] == bb.b1)
+    assert(idomtree[bb.b6] == bb.b5)
+    assert(idomtree[bb.exit] == bb.b1)
 end
 
+-- do -- dflocal, dfup, df
+--     local bbgraph = main:bbgraph()
+--     local idomtree = main:idomtree(bbgraph)
+--     local bb = bbgraphmap(bbgraph)
+
+    
+--     local dflx = dflocal(bb.entry, idomtree)
+--     print(dflx)
+-- end
+
 testing.ok()
-
-
-
-
-
-
-
-
-
