@@ -45,5 +45,6 @@
 #define LLB_FUNCTION ("__llb_function")
 #define LLB_BASICBLOCK ("__llb_basicblock")
 #define LLB_INSTRUCTION ("__llb_instruction")
+#define LLB_BUILDER ("__llb_builder")
 
 #endif

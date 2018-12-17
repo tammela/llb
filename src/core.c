@@ -27,6 +27,7 @@
 #include <llvm-c/IRReader.h>
 
 #include "bb.h"
+#include "builder.h"
 #include "core.h"
 #include "function.h"
 #include "instruction.h"
@@ -128,6 +129,7 @@ static int llb_write_bitcode(lua_State* L) {
 // clang-format off
 struct luaL_Reg module_mt[] = {
     {"dispose", module_dispose},
+    {"get_builder", module_get_builder},
     {"__index", module_index},
     {"__pairs", module_pairs},
     {"__tostring", module_tostring},
@@ -159,6 +161,12 @@ struct luaL_Reg inst_mt[] = {
     {"__tostring", instruction_tostring},
     {NULL, NULL}
 };
+
+struct luaL_Reg builder_mt[] = {
+    {"position_builder", builder_position_builder},
+    {"build_phi", builder_build_phi},
+    {NULL, NULL}
+};
 // clang-format on
 
 // ==================================================
@@ -181,7 +189,9 @@ int luaopen_core(lua_State* L) {
     lua_pushlightuserdata(L, func_mt);
     lua_pushlightuserdata(L, bb_mt);
     lua_pushlightuserdata(L, inst_mt);
+    lua_pushlightuserdata(L, builder_mt);
 
+    lua_setfield(L, LUA_REGISTRYINDEX, LLB_BUILDER);
     lua_setfield(L, LUA_REGISTRYINDEX, LLB_INSTRUCTION);
     lua_setfield(L, LUA_REGISTRYINDEX, LLB_BASICBLOCK);
     lua_setfield(L, LUA_REGISTRYINDEX, LLB_FUNCTION);
