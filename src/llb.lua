@@ -25,6 +25,7 @@ do
     llb.newclass(require("function"), "function")
     llb.newclass({}, "basicblock")
     llb.newclass(require("instruction"), "instruction")
+    llb.newclass({}, "builder")
 end
 
 return llb

@@ -18,14 +18,11 @@
  * along with lua-llvm-binding. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _LLB_MODULE_H
-#define _LLB_MODULE_H
+#ifndef _LLB_BUILDER_H
+#define _LLB_BUILDER_H
 
-extern int module_new(lua_State*, LLVMModuleRef);
-extern int module_dispose(lua_State*);
-extern int module_pairs(lua_State*);
-extern int module_index(lua_State*);
-extern int module_get_builder(lua_State*);
-extern int module_tostring(lua_State*);
+extern int builder_new(lua_State*, LLVMBuilderRef);
+extern int builder_position_builder(lua_State*);
+extern int builder_build_phi(lua_State*);
 
 #endif
