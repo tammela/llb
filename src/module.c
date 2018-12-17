@@ -23,6 +23,7 @@
 
 #include <llvm-c/Core.h>
 
+#include "builder.h"
 #include "core.h"
 #include "function.h"
 
@@ -77,6 +78,14 @@ int module_index(lua_State* L) {
     } else {
         function_new(L, f);
     }
+    return 1;
+}
+
+int module_get_builder(lua_State* L) {
+    LLVMModuleRef module = getmodule(L);
+    LLVMContextRef context = LLVMGetModuleContext(module);
+    LLVMBuilderRef builder = LLVMCreateBuilderInContext(context);
+    builder_new(L, builder);
     return 1;
 }
 
