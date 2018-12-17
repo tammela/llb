@@ -21,13 +21,13 @@
 
 -- a LLVM module must not be disposed until we are done with it
 
-local llb = require'llb'
-local testing = require'testing'
+local llb = require "llb"
+local testing = require "testing"
 
 testing.header("GC Regression")
 
 for i = 1, 2^8 do
-    llb.load_ir("aux/simple.ll")['main']:domtree()
+    local x = llb.load_ir("aux/simple.ll")["main"]:bbgraph():dom()
 end
 
 testing.ok()

@@ -11,5 +11,6 @@ bugs:
 
 tests:
 	$(TEST) test_set.lua
+	$(TEST) test_bbgraph.lua
 	$(TEST) test_functions.lua
 	$(TEST) test_instructions.lua
