@@ -69,7 +69,7 @@ end
 
 -- puts the IR in pruned SSA form
 -- removes and replaces useless alloca/store/load instructions
-function fn:prunedssa(bbgraph)
+function fn:prunedssa(builder, bbgraph)
     local bbgraph = bbgraph or self:bbgraph()
     local instructions = self:map_instructions(bbgraph)
 
@@ -90,7 +90,26 @@ function fn:prunedssa(bbgraph)
         end
     end
 
-    -- TODO: falta coisa...
+    -- pruning variables that don't need a phi
+    for alloca, phiblocks in pairs(phis) do
+        if phiblocks:is_empty() then
+            local store
+            for _, usage in ipairs(alloca.usages) do
+                if usage.ref:is_store() then
+                    store = usage
+                end
+            end
+            local storedvalue = store.ref:operands()[1]
+            for _, usage in ipairs(alloca.usages) do
+                if usage.ref:is_load() then
+                    usage.ref:replace_with(storedvalue)
+                    usage.ref:delete()
+                end
+            end
+            alloca.ref:delete()
+            store.ref:delete()
+        end
+    end
 
     return phis
 end

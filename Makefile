@@ -26,7 +26,7 @@ V= 0.1
 # Targets start here.
 all: $(PLAT)
 
-$(PLATS):
+$(PLATS): format
 	$(MKDIR) $(BIN)
 	cd src && $(MAKE) $@
 	cp src/*.lua bin/

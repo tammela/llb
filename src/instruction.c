@@ -79,37 +79,32 @@ int instruction_usages(lua_State* L) {
 
 int instruction_is_alloca(lua_State* L) {
     LLVMValueRef instruction = getinstruction(L);
-
-    if (LLVMIsAAllocaInst(instruction)) {
-        lua_pushboolean(L, 1);
-    } else {
-        lua_pushboolean(L, 0);
-    }
-
+    lua_pushboolean(L, LLVMIsAAllocaInst(instruction) ? 1 : 0);
     return 1;
 }
 
 int instruction_is_store(lua_State* L) {
     LLVMValueRef instruction = getinstruction(L);
-
-    if (LLVMIsAStoreInst(instruction)) {
-        lua_pushboolean(L, 1);
-    } else {
-        lua_pushboolean(L, 0);
-    }
-
+    lua_pushboolean(L, LLVMIsAStoreInst(instruction) ? 1 : 0);
     return 1;
 }
 
 int instruction_is_load(lua_State* L) {
     LLVMValueRef instruction = getinstruction(L);
+    lua_pushboolean(L, LLVMIsALoadInst(instruction) ? 1 : 0);
+    return 1;
+}
 
-    if (LLVMIsALoadInst(instruction)) {
-        lua_pushboolean(L, 1);
-    } else {
-        lua_pushboolean(L, 0);
-    }
+int instruction_replace_with(lua_State* L) {
+    LLVMValueRef old = getinstruction(L);
+    LLVMValueRef new = (LLVMValueRef)lua_touserdata(L, 2);
+    LLVMReplaceAllUsesWith(old, new);
+    return 1;
+}
 
+int instruction_delete(lua_State* L) {
+    LLVMValueRef instruction = getinstruction(L);
+    LLVMInstructionEraseFromParent(instruction);
     return 1;
 }
 

@@ -39,7 +39,7 @@ linux: $(OBJS)
 	$(CC) -shared -dl -Wl,-soname,$(LLB_SO) -o $(TO_SO) $(OBJS) $(LDFLAGS)
 
 clean:
-	$(RM) $(LLB_SO) $(LLB_DYLIB) $(OBJS)
+	$(RM) $(LLB_SO) $(LLB_DYLIB) $(OBJS) *.o
 
 # Binary dependencies.
 bb.o: bb.c bb.h core.h

@@ -33,9 +33,9 @@ local function bbgraphmap(bbgraph)
     return t
 end
 
-local functions = llb.load_ir("aux/book.ll")
-assert(functions)
-local main = functions.main
+local module = llb.load_ir("aux/book.ll")
+assert(module)
+local main = module.main
 assert(main)
 
 do -- bbgraph
@@ -55,12 +55,16 @@ end
 -- end
 
 do -- prunedssa
+    local builder = getmetatable(module).get_builder(module) -- FIXME: ?
+    assert(builder)
     local bbgraph = main:bbgraph()
-    local phis = main:prunedssa(bbgraph)
+    local phis = main:prunedssa(builder, bbgraph)
 
     for instruction, phis in pairs(phis) do
         print(instruction.ref:label(), phis)
     end
+
+    llb.write_bitcode(module, "testando.bc")
 end
 
 testing.ok()

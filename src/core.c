@@ -158,11 +158,14 @@ struct luaL_Reg inst_mt[] = {
     {"is_alloca", instruction_is_alloca},
     {"is_store", instruction_is_store},
     {"is_load", instruction_is_load},
+    {"replace_with", instruction_replace_with},
+    {"delete", instruction_delete},
     {"__tostring", instruction_tostring},
     {NULL, NULL}
 };
 
 struct luaL_Reg builder_mt[] = {
+    {"prune_alloca", builder_prune_alloca},
     {"position_builder", builder_position_builder},
     {"build_phi", builder_build_phi},
     {NULL, NULL}
