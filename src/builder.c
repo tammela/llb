@@ -27,6 +27,8 @@
 #include "core.h"
 #include "function.h"
 
+#include <stdio.h> // TODO: remove
+
 #define getbuilder(L) (*(LLVMBuilderRef*)luaL_checkudata(L, 1, LLB_BUILDER))
 
 int builder_new(lua_State* L, LLVMBuilderRef builder) {
@@ -34,14 +36,25 @@ int builder_new(lua_State* L, LLVMBuilderRef builder) {
     return 1;
 }
 
+int builder_prune_alloca(lua_State* L) {
+    // LLVMBuilderRef builder = getbuilder(L);
+    // LLVMValueRef alloca =
+    //     *(LLVMValueRef*)luaL_checkudata(L, 2, LLB_INSTRUCTION);
+    return 0;
+}
+
 int builder_position_builder(lua_State* L) {
-    LLVMBuilderRef builder = *(LLVMBuilderRef*)luaL_checkudata(L, 1, LLB_BUILDER);
+    LLVMBuilderRef builder =
+        *(LLVMBuilderRef*)luaL_checkudata(L, 1, LLB_BUILDER);
     if (lua_gettop(L) == 2) {
-        LLVMValueRef inst = *(LLVMValueRef*)luaL_checkudata(L, 2, LLB_INSTRUCTION);
+        LLVMValueRef inst =
+            *(LLVMValueRef*)luaL_checkudata(L, 2, LLB_INSTRUCTION);
         LLVMPositionBuilderBefore(builder, inst);
     } else { // 3
-        LLVMBasicBlockRef bb = *(LLVMBasicBlockRef*)luaL_checkudata(L, 2, LLB_BASICBLOCK);
-        LLVMValueRef inst = *(LLVMValueRef*)luaL_checkudata(L, 3, LLB_INSTRUCTION);
+        LLVMBasicBlockRef bb =
+            *(LLVMBasicBlockRef*)luaL_checkudata(L, 2, LLB_BASICBLOCK);
+        LLVMValueRef inst =
+            *(LLVMValueRef*)luaL_checkudata(L, 3, LLB_INSTRUCTION);
         LLVMPositionBuilder(builder, bb, inst);
     }
     return 0;

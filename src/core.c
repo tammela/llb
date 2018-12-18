@@ -163,6 +163,7 @@ struct luaL_Reg inst_mt[] = {
 };
 
 struct luaL_Reg builder_mt[] = {
+    {"prune_alloca", builder_prune_alloca},
     {"position_builder", builder_position_builder},
     {"build_phi", builder_build_phi},
     {NULL, NULL}

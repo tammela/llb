@@ -22,6 +22,7 @@
 #define _LLB_BUILDER_H
 
 extern int builder_new(lua_State*, LLVMBuilderRef);
+extern int builder_prune_alloca(lua_State*);
 extern int builder_position_builder(lua_State*);
 extern int builder_build_phi(lua_State*);
 
