@@ -7,7 +7,8 @@ entry:
 
     ; a = 4
     %a = alloca i32
-    store i32 4, i32* %a
+    %four = add i32 0, 4
+    store i32 %four, i32* %a
 
     br label %b1
 b1:

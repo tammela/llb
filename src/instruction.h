@@ -29,6 +29,8 @@ extern int instruction_usages(lua_State*);
 extern int instruction_is_alloca(lua_State*);
 extern int instruction_is_store(lua_State*);
 extern int instruction_is_load(lua_State*);
+extern int instruction_replace_with(lua_State*);
+extern int instruction_delete(lua_State*);
 extern int instruction_tostring(lua_State*);
 
 #endif

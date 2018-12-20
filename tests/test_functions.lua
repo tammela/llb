@@ -63,6 +63,8 @@ do -- prunedssa
     for instruction, phis in pairs(phis) do
         print(instruction.ref:label(), phis)
     end
+
+    llb.write_bitcode(module, "testando.bc")
 end
 
 testing.ok()

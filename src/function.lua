@@ -91,22 +91,23 @@ function fn:prunedssa(builder, bbgraph)
     end
 
     -- pruning variables that don't need a phi
-    for instruction, phiblocks in pairs(phis) do
+    for alloca, phiblocks in pairs(phis) do
         if phiblocks:is_empty() then
             local store
-            for _, usage in ipairs(instruction.usages) do
+            for _, usage in ipairs(alloca.usages) do
                 if usage.ref:is_store() then
                     store = usage
                 end
             end
-            print(store.ref)
-            for _, usage in ipairs(instruction.usages) do
+            local storedvalue = store.ref:operands()[1]
+            for _, usage in ipairs(alloca.usages) do
                 if usage.ref:is_load() then
-                    print(usage.ref) -- TODO
-                    -- replace load temp for first store op1 value-ref
+                    usage.ref:replace_with(storedvalue)
+                    usage.ref:delete()
                 end
             end
-            -- builder:prune_alloca(instruction.ref)
+            alloca.ref:delete()
+            store.ref:delete()
         end
     end
 
