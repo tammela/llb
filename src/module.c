@@ -29,8 +29,38 @@
 
 #define getmodule(L) (*(LLVMModuleRef*)luaL_checkudata(L, 1, LLB_MODULE))
 
+static int internal_modgc(lua_State* L) {
+    lua_pushnil(L);
+    while (lua_next(L, 1) != 0) {
+        LLVMDisposeModule(*(LLVMModuleRef*)lua_touserdata(L, -2));
+        lua_pop(L, 1);
+    }
+    return 0;
+}
+
+static void build_modstable(lua_State* L) {
+    struct luaL_Reg mt[] = {{"__gc", internal_modgc}, {NULL, NULL}};
+    lua_newtable(L);
+    lua_newtable(L);
+    luaL_setfuncs(L, mt, 0);
+    lua_setmetatable(L, -2);
+}
+
 int module_new(lua_State* L, LLVMModuleRef module) {
     newuserdata(L, module, LLB_MODULE);
+    if (lua_getfield(L, LUA_REGISTRYINDEX, "internal_modules") == LUA_TNIL) {
+        lua_pop(L, 1);
+        build_modstable(L);
+        lua_pushvalue(L, -2);
+        lua_pushboolean(L, 1);
+        lua_settable(L, -3);
+        lua_setfield(L, LUA_REGISTRYINDEX, "internal_modules");
+    } else {
+        lua_pushvalue(L, -2);
+        lua_pushboolean(L, 1);
+        lua_settable(L, -3);
+        lua_pop(L, 1);
+    }
     return 1;
 }
 
