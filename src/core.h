@@ -24,7 +24,7 @@
 // ==================================================
 //
 //  creates a new userdata and set it's mt to tname.
-//  leaves the userdata on the stack.
+//  leaves the userdata on the stack
 //
 // ==================================================
 
@@ -37,7 +37,7 @@
 
 // ==================================================
 //
-//  metatable registry keys.
+//  metatable registry keys
 //
 // ==================================================
 
