@@ -30,17 +30,32 @@
 #define getbasicblock(L) \
     (*(LLVMBasicBlockRef*)luaL_checkudata(L, 1, LLB_BASICBLOCK));
 
+// ==================================================
+//
+// instantiates a new basic block object
+//
+// ==================================================
 int bb_new(lua_State* L, LLVMBasicBlockRef bb) {
     newuserdata(L, bb, LLB_BASICBLOCK);
     return 1;
 }
 
+// ==================================================
+//
+// gets a light userdata reference to a basic block
+//
+// ==================================================
 int bb_pointer(lua_State* L) {
     LLVMBasicBlockRef bb = getbasicblock(L);
     lua_pushlightuserdata(L, bb);
     return 1;
 }
 
+// ==================================================
+//
+// gets all successors of a basic block
+//
+// ==================================================
 int bb_successors(lua_State* L) {
     LLVMBasicBlockRef bb = getbasicblock(L);
 
@@ -55,6 +70,11 @@ int bb_successors(lua_State* L) {
     return 1;
 }
 
+// ==================================================
+//
+// gets all instructions of a basic block
+//
+// ==================================================
 int bb_instructions(lua_State* L) {
     LLVMBasicBlockRef bb = getbasicblock(L);
 
@@ -71,6 +91,11 @@ int bb_instructions(lua_State* L) {
     return 1;
 }
 
+// ==================================================
+//
+// __tostring metamethod
+//
+// ==================================================
 int bb_tostring(lua_State* L) {
     LLVMBasicBlockRef bb = getbasicblock(L);
     lua_pushstring(L, LLVMGetBasicBlockName(bb));
