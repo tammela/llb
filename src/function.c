@@ -30,11 +30,21 @@
 
 #define getfunction(L) (*(LLVMValueRef*)luaL_checkudata(L, 1, LLB_FUNCTION));
 
+// ==================================================
+//
+// instantiates a new function object
+//
+// ==================================================
 int function_new(lua_State* L, LLVMValueRef function) {
     newuserdata(L, function, LLB_FUNCTION);
     return 1;
 }
 
+// ==================================================
+//
+// gets all function's basic blocks
+//
+// ==================================================
 int function_basic_blocks(lua_State* L) {
     LLVMValueRef f = getfunction(L);
     unsigned size = LLVMCountBasicBlocks(f);
@@ -46,8 +56,7 @@ int function_basic_blocks(lua_State* L) {
 
     LLVMBasicBlockRef* bbs = calloc(size, sizeof(LLVMBasicBlockRef));
     if (bbs == NULL) {
-        // TODO: make macro
-        return luaL_error(L, "%s: out of memory\n", __func__);
+        return throw(L, "out of memory");
     }
 
     LLVMGetBasicBlocks(f, bbs);
@@ -60,6 +69,11 @@ int function_basic_blocks(lua_State* L) {
     return 1;
 }
 
+// ==================================================
+//
+// __tostring metamethod
+//
+// ==================================================
 int function_tostring(lua_State* L) {
     LLVMValueRef f = getfunction(L);
     lua_pushstring(L, LLVMGetValueName(f));

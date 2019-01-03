@@ -33,6 +33,17 @@
 #include "instruction.h"
 #include "module.h"
 
+static int llb_error(lua_State* L, const char* err) {
+    lua_pushnil(L);
+    lua_pushfstring(L, "[LLVM] %s", err);
+    return 2;
+}
+
+// ==================================================
+//
+// instantiates a new class on the lua registry
+//
+// ==================================================
 static int llb_newclass(lua_State* L) {
     const char* tname = luaL_checkstring(L, 2);
     tname = lua_pushfstring(L, "__llb_%s", tname);
@@ -50,12 +61,6 @@ static int llb_newclass(lua_State* L) {
     return 0;
 }
 
-static int llb_error(lua_State* L, const char* err) {
-    lua_pushnil(L);
-    lua_pushfstring(L, "[LLVM] %s", err);
-    return 2;
-}
-
 // ==================================================
 //
 //  creates a llvm module from a .ll file
@@ -63,23 +68,18 @@ static int llb_error(lua_State* L, const char* err) {
 // ==================================================
 static int llb_load_ir(lua_State* L) {
     const char* path = luaL_checkstring(L, 1);
-    char* err;
     LLVMContextRef ctx = LLVMContextCreate();
+    char* err;
 
-    // creating the memory buffer
     LLVMMemoryBufferRef memory_buffer;
     if (LLVMCreateMemoryBufferWithContentsOfFile(path, &memory_buffer, &err)) {
         return llb_error(L, err);
     }
 
-    // creating the module
     LLVMModuleRef module;
     if (LLVMParseIRInContext(ctx, memory_buffer, &module, &err)) {
-        // FIXME: this is causing an error
-        // LLVMDisposeMemoryBuffer(memory_buffer);
         return llb_error(L, err);
     }
-    // LLVMDisposeMemoryBuffer(memory_buffer);
 
     return module_new(L, module);
 }
@@ -93,13 +93,11 @@ static int llb_load_bitcode(lua_State* L) {
     const char* path = luaL_checkstring(L, 1);
     char* err;
 
-    // reading the file from path
     LLVMMemoryBufferRef memory_buffer;
     if (LLVMCreateMemoryBufferWithContentsOfFile(path, &memory_buffer, &err)) {
         return llb_error(L, err);
     }
 
-    // creating the module
     LLVMModuleRef module;
     if (LLVMParseBitcode(memory_buffer, &module, &err)) {
         LLVMDisposeMemoryBuffer(memory_buffer);

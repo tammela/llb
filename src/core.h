@@ -24,10 +24,9 @@
 // ==================================================
 //
 //  creates a new userdata and set it's mt to tname.
-//  leaves the userdata on the stack.
+//  leaves the userdata on the stack
 //
 // ==================================================
-
 #define newuserdata(L, value, tname)                                    \
     do {                                                                \
         typeof(value)* ptr = lua_newuserdata(L, sizeof(typeof(value))); \
@@ -37,14 +36,20 @@
 
 // ==================================================
 //
-//  metatable registry keys.
+//  metatable registry keys
 //
 // ==================================================
-
 #define LLB_MODULE ("__llb_module")
 #define LLB_FUNCTION ("__llb_function")
 #define LLB_BASICBLOCK ("__llb_basicblock")
 #define LLB_INSTRUCTION ("__llb_instruction")
 #define LLB_BUILDER ("__llb_builder")
+
+// ==================================================
+//
+// helpers
+//
+// ==================================================
+#define throw(L, s) luaL_error(L, "%s: "s"\n", __func__)
 
 #endif
