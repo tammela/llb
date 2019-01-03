@@ -54,31 +54,31 @@ end
 --     print(instructions)
 -- end
 
--- do -- prunedssa
---     local builder = getmetatable(module).get_builder(module) -- FIXME: ?
---     assert(builder)
---     local bbgraph = main:bbgraph()
---     local phis = main:prunedssa(builder, bbgraph)
-
---     for alloca, phis in pairs(phis) do
---         print(alloca.ref:label(), phis)
---     end
-
---     llb.write_bitcode(module, "testando.bc")
--- end
-
--- TODO: move
-do -- bb:store_instructions
+do -- prunedssa
+    local builder = getmetatable(module).get_builder(module) -- FIXME: ?
+    assert(builder)
     local bbgraph = main:bbgraph()
-    for _, bb in ipairs(bbgraph) do
-        print(bb.ref)
-        for i, store in ipairs(bb.ref:store_instructions()) do
-            print("---", i)
-            print(store.reference)
-            print(store.value)
-            print(store.alloca)
-        end
+    local phis = main:prunedssa(builder, bbgraph)
+
+    for alloca, phis in pairs(phis) do
+        print(alloca.ref:label(), phis)
     end
+
+    -- llb.write_bitcode(module, "testando.bc")
 end
+
+-- -- TODO: move
+-- do -- bb:store_instructions
+--     local bbgraph = main:bbgraph()
+--     for _, bb in ipairs(bbgraph) do
+--         print(bb.ref)
+--         for i, store in ipairs(bb.ref:store_instructions()) do
+--             print("---", i)
+--             print(store.reference)
+--             print(store.value)
+--             print(store.alloca)
+--         end
+--     end
+-- end
 
 testing.ok()

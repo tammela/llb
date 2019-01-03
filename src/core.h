@@ -50,6 +50,9 @@
 // helpers
 //
 // ==================================================
-#define throw(L, s) luaL_error(L, "%s: "s"\n", __func__)
+#define throw(L, s) luaL_error(L, \
+    "%s: "s                       \
+    "\n",                         \
+    __func__)
 
 #endif

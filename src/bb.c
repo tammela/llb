@@ -99,6 +99,12 @@ int bb_tostring(lua_State* L) {
     return 1;
 }
 
+// ==================================================
+//
+// TODO
+//
+// ==================================================
+
 // creates an array with all the store instructions within a basic block
 int bb_store_instructions(lua_State* L) {
     LLVMBasicBlockRef bb = getbasicblock(L);
@@ -116,5 +122,14 @@ int bb_store_instructions(lua_State* L) {
             lua_seti(L, -2, luaL_len(L, -2) + 1);
         }
     } while ((instruction = LLVMGetNextInstruction(instruction)));
+    return 1;
+}
+
+int bb_build_phi(lua_State* L) {
+    // TODO
+    // LLVMBasicBlockRef bb = getbasicblock(L);
+    // phi_block:build_phi(builder, alloca)
+    // // LLVMValueRef LLVMBuildPhi(LLVMBuilderRef, LLVMTypeRef, const char *);
+    // // LLVMValueRef phi = LLVMBuildPhi(builder, alloca_type, phi_name);
     return 1;
 }

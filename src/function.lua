@@ -71,6 +71,8 @@ end
 -- removes and replaces useless alloca/store/load instructions
 function fn:prunedssa(builder, bbgraph)
     local bbgraph = bbgraph or self:bbgraph()
+    local dom = bbgraph:dom() -- TODO: check if necessary later
+    local idom = bbgraph:idom(dom)
     local instructions = self:map_instructions(bbgraph)
 
     -- for each alloca
@@ -78,14 +80,49 @@ function fn:prunedssa(builder, bbgraph)
     for _, instruction in pairs(instructions) do
         if instruction.ref:is_alloca() then
             -- if S is the set of nodes that store with the alloca
-            local s = set.new()
+            local S = set.new()
             for _, usage in pairs(instruction.usages) do
                 if usage.ref:is_store() then
-                    s:add(usage.bb)
+                    S:add(usage.bb)
                 end
             end
             -- DF+(S) is the set of nodes that need phi-functions for the alloca
-            phis[instruction] = bbgraph:dfplus(s)
+            phis[instruction] = bbgraph:dfplus(S)
+        end
+    end
+
+    local alloca = nil
+    local bb = nil
+
+    -- returns the last store instruction for a given alloca
+    local function laststore(block, alloca, idom)
+        local store = nil
+        while block ~= nil and store == nil do
+            local stores = block.ref:store_instructions() -- TODO: optimize
+            for i = #stores, 1, -1 do
+                if alloca.ref:equals(stores[i].alloca) then
+                    store = stores[i]
+                    break
+                end
+            end
+            block = idom[block]
+        end
+        return store
+    end
+
+    for alloca, phis in pairs(phis) do
+        for phi_block in pairs(phis) do
+            for predecessor in pairs(phi_block.predecessors) do
+                local laststore = laststore(predecessor, alloca, idom)
+                phi_block:build_phi(builder, alloca)
+            end
+            -- print("--------------------")
+            -- print(phi.ref)
+            -- print(alloca.ref)
+            -- for predecessor, store in pairs(phifrom) do
+            --     print("predecessor(" .. tostring(predecessor.ref) .. ")")
+            --     print(store.reference)
+            -- end
         end
     end
 
