@@ -73,43 +73,92 @@ function fn:prunedssa(builder, bbgraph)
     local bbgraph = bbgraph or self:bbgraph()
     local instructions = self:map_instructions(bbgraph)
 
+    -- for each alloca
     local phis = {}
-
-    -- for each "alloca" variable "x" 
     for _, instruction in pairs(instructions) do
         if instruction.ref:is_alloca() then
-            -- if S is the set of nodes that assign to variable "x"
+            -- if S is the set of nodes that store with the alloca
             local s = set.new()
             for _, usage in pairs(instruction.usages) do
                 if usage.ref:is_store() then
                     s:add(usage.bb)
                 end
             end
-            -- DF+(S) is the set of nodes that need phi-functions for "x"
+            -- DF+(S) is the set of nodes that need phi-functions for the alloca
             phis[instruction] = bbgraph:dfplus(s)
         end
     end
 
-    -- pruning variables that don't need a phi
-    for alloca, phiblocks in pairs(phis) do
-        if phiblocks:is_empty() then
-            local store
-            for _, usage in ipairs(alloca.usages) do
-                if usage.ref:is_store() then
-                    store = usage
-                end
-            end
-            local storedvalue = store.ref:operands()[1]
-            for _, usage in ipairs(alloca.usages) do
-                if usage.ref:is_load() then
-                    usage.ref:replace_with(storedvalue)
-                    usage.ref:delete()
-                end
-            end
-            alloca.ref:delete()
-            store.ref:delete()
-        end
-    end
+    -- -- TODO: bagunça - refatorar
+    -- -- pruning variables that don't need a phi
+    -- -- TODO: this is wrong - imagine a single entry block program
+    -- for alloca, phiblocks in pairs(phis) do
+    --     if phiblocks:is_empty() then
+    --         local store
+    --         for _, usage in ipairs(alloca.usages) do
+    --             if usage.ref:is_store() then
+    --                 store = usage
+    --             end
+    --         end
+    --         local storedvalue = store.ref:operands()[1]
+    --         for _, usage in ipairs(alloca.usages) do
+    --             if usage.ref:is_load() then
+    --                 usage.ref:replace_with(storedvalue)
+    --                 usage.ref:delete()
+    --             end
+    --         end
+    --         alloca.ref:delete()
+    --         store.ref:delete()
+    --         phis[alloca] = nil -- TODO: is this safe?
+    --     end
+    -- end
+
+    -- -- placing phis
+    -- for alloca, blocks in pairs(phis) do
+    --     for block in pairs(blocks) do
+    --         local last_usage = alloca.usages[#alloca.usages].ref
+    --         print(alloca.ref, block.ref, last_usage)
+    --     end
+    -- end
+
+    -- -- TODO
+
+    -- -- TODO: bagunça - refatorar
+    -- local function remove(alloca)
+    --     local visited = {}
+    --     local function dfs(bb, visited)
+    --         -- print("basic block: ", bb.ref)
+    --         for successor in pairs(bb.successors) do
+    --             if visited[successor] == nil then
+    --                 visited[successor] = successor
+    --                 -- 
+    --                 for _, instruction in ipairs(bb.ref:instructions()) do
+    --                     if instruction:is_store() then
+    --                         local operands = instruction:operands()
+    --                         local store_value = operands[1]
+    --                         local store_alloca = operands[2]
+    --                         if alloca.ref:equals(store_alloca) then
+    --                             alloca.replace_with = store_value
+    --                         end
+    --                     elseif instruction:is_load() then
+    --                         local operands = instruction:operands()
+    --                         local load_alloca = operands[1]
+    --                         if alloca.ref:equals(load_alloca) then
+    --                             instruction:replace_with(alloca.replace_with)
+    --                             instruction:delete()
+    --                         end
+    --                     end
+    --                 end
+    --                 -- 
+    --                 dfs(successor, visited)
+    --             end
+    --         end
+    --     end
+    --     dfs(bbgraph[1], visited)
+    -- end
+    -- for alloca in pairs(phis) do
+    --     remove(alloca)
+    -- end
 
     return phis
 end
