@@ -206,7 +206,7 @@ function bbgraph:dfplus(s, df)
 
     -- DF[1](S) = DF(S)
     -- DF[i+1](S) = DF(S U DF[i](S))
-    -- DF+(S) = lim[i to infinity] DF[i](S)
+    -- DF+(S) = lim[i => infinity] DF[i](S)
     local dfp = dfs
     repeat
         local change = false

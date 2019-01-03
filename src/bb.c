@@ -18,6 +18,8 @@
  * along with lua-llvm-binding. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <stdlib.h>
+
 #include <lauxlib.h>
 #include <lua.h>
 
@@ -26,9 +28,6 @@
 #include "bb.h"
 #include "core.h"
 #include "instruction.h"
-
-#define getbasicblock(L) \
-    (*(LLVMBasicBlockRef*)luaL_checkudata(L, 1, LLB_BASICBLOCK));
 
 // ==================================================
 //
@@ -46,7 +45,7 @@ int bb_new(lua_State* L, LLVMBasicBlockRef bb) {
 //
 // ==================================================
 int bb_pointer(lua_State* L) {
-    LLVMBasicBlockRef bb = getbasicblock(L);
+    LLVMBasicBlockRef bb = getbasicblock(L, 1);
     lua_pushlightuserdata(L, bb);
     return 1;
 }
@@ -57,7 +56,7 @@ int bb_pointer(lua_State* L) {
 //
 // ==================================================
 int bb_successors(lua_State* L) {
-    LLVMBasicBlockRef bb = getbasicblock(L);
+    LLVMBasicBlockRef bb = getbasicblock(L, 1);
 
     LLVMValueRef terminator = LLVMGetBasicBlockTerminator(bb);
     unsigned n_succs = LLVMGetNumSuccessors(terminator);
@@ -76,7 +75,7 @@ int bb_successors(lua_State* L) {
 //
 // ==================================================
 int bb_instructions(lua_State* L) {
-    LLVMBasicBlockRef bb = getbasicblock(L);
+    LLVMBasicBlockRef bb = getbasicblock(L, 1);
     lua_newtable(L);
     int i = 0;
     for (LLVMValueRef inst = LLVMGetFirstInstruction(bb); inst != NULL;
@@ -94,7 +93,7 @@ int bb_instructions(lua_State* L) {
 //
 // ==================================================
 int bb_tostring(lua_State* L) {
-    LLVMBasicBlockRef bb = getbasicblock(L);
+    LLVMBasicBlockRef bb = getbasicblock(L, 1);
     lua_pushstring(L, LLVMGetBasicBlockName(bb));
     return 1;
 }
@@ -107,7 +106,7 @@ int bb_tostring(lua_State* L) {
 
 // creates an array with all the store instructions within a basic block
 int bb_store_instructions(lua_State* L) {
-    LLVMBasicBlockRef bb = getbasicblock(L);
+    LLVMBasicBlockRef bb = getbasicblock(L, 1);
     lua_newtable(L);
     LLVMValueRef instruction = LLVMGetFirstInstruction(bb);
     do {
@@ -126,10 +125,39 @@ int bb_store_instructions(lua_State* L) {
 }
 
 int bb_build_phi(lua_State* L) {
-    // TODO
-    // LLVMBasicBlockRef bb = getbasicblock(L);
-    // phi_block:build_phi(builder, alloca)
-    // // LLVMValueRef LLVMBuildPhi(LLVMBuilderRef, LLVMTypeRef, const char *);
-    // // LLVMValueRef phi = LLVMBuildPhi(builder, alloca_type, phi_name);
-    return 1;
+    LLVMBasicBlockRef bb = getbasicblock(L, 1);
+    LLVMBuilderRef builder = getbuilder(L, 2);
+    LLVMValueRef alloca = getinstruction(L, 3);
+
+    LLVMTypeRef alloca_type = LLVMGetAllocatedType(alloca);
+
+    int size = luaL_len(L, 4);
+    LLVMValueRef incoming_values[size];
+    LLVMBasicBlockRef incoming_blocks[size];
+
+    for (int i = 0; i < size; i++) {
+        lua_geti(L, 4, i + 1);
+        switch (luaL_len(L, -1)) {
+            case 1:
+                incoming_values[i] = LLVMGetUndef(alloca_type);
+                lua_geti(L, -1, 1);
+                incoming_blocks[i] = getbasicblock(L, -1);
+                break;
+            case 2:
+                lua_geti(L, -1, 1);
+                incoming_values[i] = getinstruction(L, -1);
+                lua_pop(L, 1);
+                lua_geti(L, -1, 2);
+                incoming_blocks[i] = getbasicblock(L, -1);
+                break;
+            default:
+                UNREACHABLE;
+        }
+        lua_pop(L, 2);
+    }
+
+    LLVMPositionBuilderBefore(builder, LLVMGetFirstInstruction(bb));
+    LLVMValueRef phi = LLVMBuildPhi(builder, alloca_type, "phi"); // TODO: name
+    LLVMAddIncoming(phi, incoming_values, incoming_blocks, size);
+    return 0;
 }

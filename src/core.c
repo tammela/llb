@@ -147,6 +147,7 @@ struct luaL_Reg bb_mt[] = {
     {"__tostring", bb_tostring},
     // TODO: WIP
     {"store_instructions", bb_store_instructions},
+    {"build_phi", bb_build_phi},
     {NULL, NULL}
 };
 

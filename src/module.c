@@ -27,8 +27,6 @@
 #include "core.h"
 #include "function.h"
 
-#define getmodule(L) (*(LLVMModuleRef*)luaL_checkudata(L, 1, LLB_MODULE))
-
 static int internal_modgc(lua_State* L) {
     lua_pushnil(L);
     while (lua_next(L, 1) != 0) {
@@ -65,13 +63,13 @@ int module_new(lua_State* L, LLVMModuleRef module) {
 }
 
 int module_dispose(lua_State* L) {
-    LLVMModuleRef module = getmodule(L);
+    LLVMModuleRef module = getmodule(L, 1);
     LLVMDisposeModule(module);
     return 0;
 }
 
 static int module_iterator(lua_State* L) {
-    LLVMModuleRef module = getmodule(L);
+    LLVMModuleRef module = getmodule(L, 1);
     if (lua_isnil(L, 2)) {
         LLVMValueRef f = LLVMGetFirstFunction(module);
         const char* fname = LLVMGetValueName(f);
@@ -100,7 +98,7 @@ int module_pairs(lua_State* L) {
 }
 
 int module_index(lua_State* L) {
-    LLVMModuleRef module = getmodule(L);
+    LLVMModuleRef module = getmodule(L, 1);
     const char* key = luaL_checkstring(L, 2);
     LLVMValueRef f = LLVMGetNamedFunction(module, key);
     if (f == NULL) {
@@ -112,7 +110,7 @@ int module_index(lua_State* L) {
 }
 
 int module_get_builder(lua_State* L) {
-    LLVMModuleRef module = getmodule(L);
+    LLVMModuleRef module = getmodule(L, 1);
     LLVMContextRef context = LLVMGetModuleContext(module);
     LLVMBuilderRef builder = LLVMCreateBuilderInContext(context);
     builder_new(L, builder);
@@ -120,7 +118,7 @@ int module_get_builder(lua_State* L) {
 }
 
 int module_tostring(lua_State* L) {
-    LLVMModuleRef module = getmodule(L);
+    LLVMModuleRef module = getmodule(L, 1);
     size_t size;
     lua_pushstring(L, LLVMGetModuleIdentifier(module, &size));
     return 1;

@@ -110,12 +110,19 @@ function fn:prunedssa(builder, bbgraph)
         return store
     end
 
+    -- building phis
     for alloca, phis in pairs(phis) do
-        for phi_block in pairs(phis) do
-            for predecessor in pairs(phi_block.predecessors) do
-                local laststore = laststore(predecessor, alloca, idom)
-                phi_block:build_phi(builder, alloca)
+        for block in pairs(phis) do
+            local incomings = {}
+            for predecessor in pairs(block.predecessors) do
+                local store = laststore(predecessor, alloca, idom)
+                local incoming = {predecessor.ref}
+                if store ~= nil then
+                    table.insert(incoming, 1, store.value)
+                end
+                table.insert(incomings, incoming)
             end
+            block.ref:build_phi(builder, alloca.ref, incomings)
             -- print("--------------------")
             -- print(phi.ref)
             -- print(alloca.ref)

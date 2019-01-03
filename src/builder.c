@@ -29,15 +29,13 @@
 
 #include <stdio.h> // TODO: remove
 
-#define getbuilder(L) (*(LLVMBuilderRef*)luaL_checkudata(L, 1, LLB_BUILDER))
-
 int builder_new(lua_State* L, LLVMBuilderRef builder) {
     newuserdata(L, builder, LLB_BUILDER);
     return 1;
 }
 
 int builder_prune_alloca(lua_State* L) {
-    // LLVMBuilderRef builder = getbuilder(L);
+    // LLVMBuilderRef builder = getbuilder(L, 1);
     // LLVMValueRef alloca =
     //     *(LLVMValueRef*)luaL_checkudata(L, 2, LLB_INSTRUCTION);
     return 0;

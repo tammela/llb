@@ -24,7 +24,7 @@
 // ==================================================
 //
 //  creates a new userdata and set it's mt to tname.
-//  leaves the userdata on the stack
+//  leaves the userdata on the stack.
 //
 // ==================================================
 #define newuserdata(L, value, tname)                                    \
@@ -50,9 +50,28 @@
 // helpers
 //
 // ==================================================
-#define throw(L, s) luaL_error(L, \
-    "%s: "s                       \
-    "\n",                         \
-    __func__)
+
+// clang-format off
+
+#define getmodule(L, i) \
+    (*(LLVMModuleRef*)luaL_checkudata(L, i, LLB_MODULE))
+
+#define getfunction(L, i) \
+    (*(LLVMValueRef*)luaL_checkudata(L, i, LLB_FUNCTION))
+
+#define getbasicblock(L, i) \
+    (*(LLVMBasicBlockRef*)luaL_checkudata(L, i, LLB_BASICBLOCK))
+
+#define getinstruction(L, i) \
+    (*(LLVMValueRef*)luaL_checkudata(L, i, LLB_INSTRUCTION))
+
+#define getbuilder(L, i) \
+    (*(LLVMBuilderRef*)luaL_checkudata(L, i, LLB_BUILDER))
+
+#define throw(L, s) luaL_error(L, "%s: "s"\n", __func__)
+
+#define UNREACHABLE (exit(1))
+
+// clang-format on
 
 #endif

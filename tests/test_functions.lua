@@ -59,12 +59,7 @@ do -- prunedssa
     assert(builder)
     local bbgraph = main:bbgraph()
     local phis = main:prunedssa(builder, bbgraph)
-
-    for alloca, phis in pairs(phis) do
-        print(alloca.ref:label(), phis)
-    end
-
-    -- llb.write_bitcode(module, "testando.bc")
+    llb.write_bitcode(module, "testando.bc")
 end
 
 -- -- TODO: move
