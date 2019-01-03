@@ -53,7 +53,8 @@ int instruction_operands(lua_State* L) {
 
     lua_newtable(L);
     for (int i = 0; i < num_operands; i++) {
-        lua_pushlightuserdata(L, LLVMGetOperand(instruction, i));
+        newuserdata(L, LLVMGetOperand(instruction, i), LLB_INSTRUCTION);
+        // lua_pushlightuserdata(L, LLVMGetOperand(instruction, i));
         lua_seti(L, -2, i + 1);
     }
 
@@ -97,7 +98,8 @@ int instruction_is_load(lua_State* L) {
 
 int instruction_replace_with(lua_State* L) {
     LLVMValueRef old = getinstruction(L);
-    LLVMValueRef new = (LLVMValueRef)lua_touserdata(L, 2);
+    LLVMValueRef new = (*(LLVMValueRef*)luaL_checkudata(L, 2, LLB_INSTRUCTION));
+    // LLVMValueRef new = (LLVMValueRef)lua_touserdata(L, 2);
     LLVMReplaceAllUsesWith(old, new);
     return 1;
 }
@@ -105,6 +107,14 @@ int instruction_replace_with(lua_State* L) {
 int instruction_delete(lua_State* L) {
     LLVMValueRef instruction = getinstruction(L);
     LLVMInstructionEraseFromParent(instruction);
+    return 1;
+}
+
+// TODO: ?
+int instruction_equals(lua_State* L) {
+    LLVMValueRef i1 = getinstruction(L);
+    LLVMValueRef i2 = *(LLVMValueRef*)luaL_checkudata(L, 2, LLB_INSTRUCTION);
+    lua_pushboolean(L, i1 == i2 ? 1 : 0); // TODO: i1 == i2 ?
     return 1;
 }
 

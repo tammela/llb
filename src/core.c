@@ -147,6 +147,8 @@ struct luaL_Reg bb_mt[] = {
     {"successors", bb_successors},
     {"instructions", bb_instructions},
     {"__tostring", bb_tostring},
+    // TODO: WIP
+    {"store_instructions", bb_store_instructions},
     {NULL, NULL}
 };
 
@@ -160,6 +162,7 @@ struct luaL_Reg inst_mt[] = {
     {"is_load", instruction_is_load},
     {"replace_with", instruction_replace_with},
     {"delete", instruction_delete},
+    {"equals", instruction_equals},
     {"__tostring", instruction_tostring},
     {NULL, NULL}
 };

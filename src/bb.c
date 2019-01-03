@@ -57,9 +57,7 @@ int bb_successors(lua_State* L) {
 
 int bb_instructions(lua_State* L) {
     LLVMBasicBlockRef bb = getbasicblock(L);
-
     lua_newtable(L);
-
     int i = 0;
     for (LLVMValueRef inst = LLVMGetFirstInstruction(bb); inst != NULL;
          inst = LLVMGetNextInstruction(inst)) {
@@ -67,12 +65,31 @@ int bb_instructions(lua_State* L) {
         lua_seti(L, -2, i + 1);
         i++;
     }
-
     return 1;
 }
 
 int bb_tostring(lua_State* L) {
     LLVMBasicBlockRef bb = getbasicblock(L);
     lua_pushstring(L, LLVMGetBasicBlockName(bb));
+    return 1;
+}
+
+// creates an array with all the store instructions within a basic block
+int bb_store_instructions(lua_State* L) {
+    LLVMBasicBlockRef bb = getbasicblock(L);
+    lua_newtable(L);
+    LLVMValueRef instruction = LLVMGetFirstInstruction(bb);
+    do {
+        if (LLVMIsAStoreInst(instruction)) {
+            lua_newtable(L);
+            instruction_new(L, instruction);
+            lua_setfield(L, -2, "reference");
+            instruction_new(L, LLVMGetOperand(instruction, 0));
+            lua_setfield(L, -2, "value");
+            instruction_new(L, LLVMGetOperand(instruction, 1));
+            lua_setfield(L, -2, "alloca");
+            lua_seti(L, -2, luaL_len(L, -2) + 1);
+        }
+    } while ((instruction = LLVMGetNextInstruction(instruction)));
     return 1;
 }

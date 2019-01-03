@@ -24,7 +24,10 @@
 extern int bb_new(lua_State*, LLVMBasicBlockRef);
 extern int bb_pointer(lua_State*);
 extern int bb_successors(lua_State*);
-extern int bb_tostring(lua_State*);
 extern int bb_instructions(lua_State*);
+extern int bb_tostring(lua_State*);
+
+// TODO: WIP
+extern int bb_store_instructions(lua_State*);
 
 #endif

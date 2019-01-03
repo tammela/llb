@@ -31,6 +31,11 @@ b2:
     %zgt2 = icmp sgt i32 %load-2-z, 2
 
     br i1 %zgt2, label %b4, label %b5
+b3:
+    ; x = 2
+    store i32 2, i32* %x
+
+    br label %b5
 b4:
     ; y = x + 1 + a
     %load-1-x = load i32, i32* %x
@@ -40,11 +45,6 @@ b4:
     store i32 %sum-x-1-a, i32* %y
 
     br label %exit
-b3:
-    ; x = 2
-    store i32 2, i32* %x
-
-    br label %b5
 b5:
     ; z = x - 3
     %load-2-x = load i32, i32* %x
