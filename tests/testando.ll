@@ -33,6 +33,7 @@ b4:                                               ; preds = %b2
   %load-2-a = load i32, i32* %a
   %sum-x-1 = add i32 %load-1-x, 1
   %sum-x-1-a = add i32 %sum-x-1, %load-2-a
+  %sum-x-1-a-y = add i32 %sum-x-1-a, 3
   %sum-y-1 = add i32 %sum-x-1-a, 1
   store i32 %sum-y-1, i32* %y
   br label %exit
