@@ -124,20 +124,14 @@ local function bbdomstores(bbstores, idom)
 end
 
 -- replaces locally restricted store instructions
-local function localstores(bbgraph, bbstores)
+local function replacelocal(bbgraph, bbstores)
     for _, bb in ipairs(bbgraph) do
         for kalloca, stores in pairs(bbstores[bb]) do
-            if #stores <= 1 then
-                goto continue
+            for i = 1, #stores - 1 do
+                local current, next = stores[i], stores[i + 1]
+                bb.ref:replace_between(current.reference, next.reference,
+                    current.value, current.alloca)
             end
-            do
-                for i = 1, #stores - 1 do
-                    local current, next = stores[i], stores[i + 1]
-                    bb.ref:replace_between(current.reference, next.reference,
-                        current.value, current.alloca)
-                end
-            end
-            ::continue::
         end
     end
 end
@@ -170,7 +164,7 @@ function fn:prunedssa(builder, bbgraph)
     end
 
     -- WIP
-    localstores(bbgraph, bbstores)
+    replacelocal(bbgraph, bbstores)
 
     -- building phis
     for alloca, phis in pairs(phis) do

@@ -40,16 +40,23 @@ b4:
     ; y = 3
     store i32 3, i32* %y
 
-    ; y = x + 1 + a
+    ; TODO: this causes llvm to get stuck in a infinite loop
+    ; a = y
+    ; %load-1-y = load i32, i32* %y
+    ; store i32 %load-1-y, i32* %a
+
+    ; y = x + 1 + a + y
     %load-1-x = load i32, i32* %x
     %load-2-a = load i32, i32* %a
+    %load-2-y = load i32, i32* %y
     %sum-x-1 = add i32 %load-1-x, 1
     %sum-x-1-a = add i32 %sum-x-1, %load-2-a
+    %sum-x-1-a-y = add i32 %sum-x-1-a, %load-2-y
     store i32 %sum-x-1-a, i32* %y
 
     ; y = y + 1
-    %load-1-y = load i32, i32* %y
-    %sum-y-1 = add i32 %load-1-y, 1
+    %load-3-y = load i32, i32* %y
+    %sum-y-1 = add i32 %load-3-y, 1
     store i32 %sum-y-1, i32* %y
 
     br label %exit
