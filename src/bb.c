@@ -157,7 +157,30 @@ int bb_build_phi(lua_State* L) {
     }
 
     LLVMPositionBuilderBefore(builder, LLVMGetFirstInstruction(bb));
-    LLVMValueRef phi = LLVMBuildPhi(builder, alloca_type, "phi"); // TODO: name
+    LLVMValueRef phi = LLVMBuildPhi(builder, alloca_type, "phi");
     LLVMAddIncoming(phi, incoming_values, incoming_blocks, size);
+    return 0;
+}
+
+int bb_replace_between(lua_State* L) {
+    LLVMValueRef a1 /* current "assign" instruction */ = getinstruction(L, 2);
+    LLVMValueRef a2 /* next "assign" instruction    */ = getinstruction(L, 3);
+    LLVMValueRef value = getinstruction(L, 4);
+    LLVMValueRef alloca = getinstruction(L, 5);
+    LLVMValueRef instruction = LLVMGetNextInstruction(a1);
+    while (instruction && instruction != a2) {
+        LLVMValueRef next = LLVMGetNextInstruction(instruction);
+        if (LLVMIsALoadInst(instruction)) {
+            if (LLVMGetOperand(instruction, 0) == alloca) {
+                // replace all usages of the load with the store's value
+                LLVMReplaceAllUsesWith(instruction, value);
+                LLVMInstructionEraseFromParent(instruction);
+            }
+        }
+        instruction = next;
+    }
+    if (LLVMIsAStoreInst(a1)) {
+        LLVMInstructionEraseFromParent(a1);
+    }
     return 0;
 }

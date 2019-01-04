@@ -100,11 +100,10 @@ int instruction_delete(lua_State* L) {
     return 1;
 }
 
-// TODO: ?
 int instruction_equals(lua_State* L) {
     LLVMValueRef i1 = getinstruction(L, 1);
     LLVMValueRef i2 = getinstruction(L, 2);
-    lua_pushboolean(L, i1 == i2 ? 1 : 0); // TODO: i1 == i2 ?
+    lua_pushboolean(L, i1 == i2 ? 1 : 0); // address equality
     return 1;
 }
 

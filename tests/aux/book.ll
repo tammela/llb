@@ -37,6 +37,9 @@ b3:
 
     br label %b5
 b4:
+    ; y = 3
+    store i32 3, i32* %y
+
     ; y = x + 1 + a
     %load-1-x = load i32, i32* %x
     %load-2-a = load i32, i32* %a
@@ -44,15 +47,17 @@ b4:
     %sum-x-1-a = add i32 %sum-x-1, %load-2-a
     store i32 %sum-x-1-a, i32* %y
 
+    ; y = y + 1
+    %load-1-y = load i32, i32* %y
+    %sum-y-1 = add i32 %load-1-y, 1
+    store i32 %sum-y-1, i32* %y
+
     br label %exit
 b5:
     ; z = x - 3
     %load-2-x = load i32, i32* %x
     %sub-x-3 = sub i32 %load-2-x, 3
     store i32 %sub-x-3, i32* %z
-
-    ; x = 4
-    store i32 4, i32* %x
 
     br label %b6
 b6:

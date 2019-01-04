@@ -30,5 +30,6 @@ extern int bb_tostring(lua_State*);
 // TODO: WIP
 extern int bb_store_instructions(lua_State*);
 extern int bb_build_phi(lua_State*);
+extern int bb_replace_between(lua_State*);
 
 #endif
