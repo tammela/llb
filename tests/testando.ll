@@ -33,15 +33,15 @@ b4:                                               ; preds = %b2
   %load-2-a = load i32, i32* %a
   %sum-x-1 = add i32 %load-1-x, 1
   %sum-x-1-a = add i32 %sum-x-1, %load-2-a
-  store i32 %sum-x-1-a, i32* %y
+  %sum-y-1 = add i32 %sum-x-1-a, 1
+  store i32 %sum-y-1, i32* %y
   br label %exit
 
 b5:                                               ; preds = %b3, %b2
-  %phi2 = phi i32 [ 1, %b2 ], [ 2, %b3 ]
+  %phi1 = phi i32 [ 1, %b2 ], [ 2, %b3 ]
   %load-2-x = load i32, i32* %x
   %sub-x-3 = sub i32 %load-2-x, 3
   store i32 %sub-x-3, i32* %z
-  store i32 4, i32* %x
   br label %b6
 
 b6:                                               ; preds = %b5
@@ -51,8 +51,8 @@ b6:                                               ; preds = %b5
   br label %exit
 
 exit:                                             ; preds = %b6, %b4
-  %phi3 = phi i32 [ 1, %b4 ], [ 4, %b6 ]
-  %phi1 = phi i32 [ %sum-x-1-a, %b4 ], [ undef, %b6 ]
-  %phi = phi i32 [ 1, %b4 ], [ %sum-x-7, %b6 ]
+  %phi3 = phi i32 [ 1, %b4 ], [ %sum-x-7, %b6 ]
+  %phi2 = phi i32 [ 1, %b4 ], [ undef, %b6 ]
+  %phi = phi i32 [ %sum-y-1, %b4 ], [ undef, %b6 ]
   ret void
 }

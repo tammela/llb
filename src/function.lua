@@ -67,13 +67,91 @@ function fn:map_instructions(bbgraph)
     return instructions
 end
 
+-----------------------------------------------------
+--
+--  prunedssa & auxiliary functions
+--
+-----------------------------------------------------
+
+-- t[bb][tostring(alloca)] => {store instructions}
+local function bbstores(bbgraph)
+    local t = {}
+    for _, bb in ipairs(bbgraph) do
+        t[bb] = {}
+        for _, store in ipairs(bb.ref:store_instructions()) do
+            local kalloca = tostring(store.alloca)
+            if t[bb][kalloca] == nil then
+                t[bb][kalloca] = {}
+            end
+            table.insert(t[bb][kalloca], store)
+        end
+    end
+    return t
+end
+
+local function laststore(stores)
+    if stores == nil then
+        return nil
+    end
+    return stores[#stores]
+end
+
+-- returns f(bb, alloca) that returns dominant last store instruction
+local function bbdomstores(bbstores, idom)
+    local t = {}
+    return function(bb, alloca)
+        alloca = tostring(alloca.ref)
+        if t[bb] == nil then
+            t[bb] = {}
+        end
+        if t[bb][alloca] ~= nil then
+            goto done
+        end
+        do
+            local block = bb
+            while block ~= nil do
+                local last = laststore(bbstores[block][alloca])
+                if last ~= nil then
+                    t[bb][alloca] = last
+                    goto done
+                end
+                block = idom[block]
+            end
+        end
+        ::done::
+        return t[bb][alloca]
+    end
+end
+
+-- replaces locally restricted store instructions
+local function localstores(bbgraph, bbstores)
+    for _, bb in ipairs(bbgraph) do
+        for kalloca, stores in pairs(bbstores[bb]) do
+            if #stores <= 1 then
+                goto continue
+            end
+            do
+                for i = 1, #stores - 1 do
+                    local current, next = stores[i], stores[i + 1]
+                    bb.ref:replace_between(current.reference, next.reference,
+                        current.value, current.alloca)
+                end
+            end
+            ::continue::
+        end
+    end
+end
+
 -- puts the IR in pruned SSA form
 -- removes and replaces useless alloca/store/load instructions
 function fn:prunedssa(builder, bbgraph)
     local bbgraph = bbgraph or self:bbgraph()
     local dom = bbgraph:dom() -- TODO: check if necessary later
     local idom = bbgraph:idom(dom)
+
     local instructions = self:map_instructions(bbgraph)
+    local bbstores = bbstores(bbgraph)
+    local bbdomstores = bbdomstores(bbstores, idom)
 
     -- for each alloca
     local phis = {}
@@ -91,45 +169,34 @@ function fn:prunedssa(builder, bbgraph)
         end
     end
 
-    local alloca = nil
-    local bb = nil
-
-    -- returns the last store instruction for a given alloca
-    local function laststore(block, alloca, idom)
-        local store = nil
-        while block ~= nil and store == nil do
-            local stores = block.ref:store_instructions() -- TODO: optimize
-            for i = #stores, 1, -1 do
-                if alloca.ref:equals(stores[i].alloca) then
-                    store = stores[i]
-                    break
-                end
-            end
-            block = idom[block]
-        end
-        return store
-    end
+    -- WIP
+    localstores(bbgraph, bbstores)
 
     -- building phis
     for alloca, phis in pairs(phis) do
         for block in pairs(phis) do
             local incomings = {}
             for predecessor in pairs(block.predecessors) do
-                local store = laststore(predecessor, alloca, idom)
+                local store = bbdomstores(predecessor, alloca)
                 local incoming = {predecessor.ref}
                 if store ~= nil then
                     table.insert(incoming, 1, store.value)
                 end
                 table.insert(incomings, incoming)
             end
-            block.ref:build_phi(builder, alloca.ref, incomings)
             -- print("--------------------")
-            -- print(phi.ref)
+            -- print(block.ref)
             -- print(alloca.ref)
-            -- for predecessor, store in pairs(phifrom) do
-            --     print("predecessor(" .. tostring(predecessor.ref) .. ")")
-            --     print(store.reference)
+            -- for _, tuple in pairs(incomings) do
+            --     if #tuple == 1 then
+            --         local format = "predecessor(%s) => undef\n"
+            --         io.write(string.format(format, tuple[1]))
+            --     elseif #tuple == 2 then
+            --         local format = "predecessor(%s) => %s\n"
+            --         io.write(string.format(format, tuple[2], tuple[1]))
+            --     end
             -- end
+            block.ref:build_phi(builder, alloca.ref, incomings)
         end
     end
 
