@@ -86,6 +86,10 @@ int module_new(lua_State* L, LLVMModuleRef module) {
 // ==================================================
 int module_dispose(lua_State* L) {
     LLVMModuleRef module = getmodule(L, 1);
+    lua_getfield(L, LUA_REGISTRYINDEX, "internal_modules");
+    lua_pushvalue(L, 1);
+    lua_pushnil(L);
+    lua_settable(L, -3);
     LLVMDisposeModule(module);
     return 0;
 }
