@@ -109,7 +109,7 @@ int bb_store_instructions(lua_State* L) {
     LLVMBasicBlockRef bb = getbasicblock(L, 1);
     lua_newtable(L);
     LLVMValueRef instruction = LLVMGetFirstInstruction(bb);
-    do {
+    while (instruction) {
         if (LLVMIsAStoreInst(instruction)) {
             lua_newtable(L);
             instruction_new(L, instruction);
@@ -120,7 +120,8 @@ int bb_store_instructions(lua_State* L) {
             lua_setfield(L, -2, "alloca");
             lua_seti(L, -2, luaL_len(L, -2) + 1);
         }
-    } while ((instruction = LLVMGetNextInstruction(instruction)));
+        instruction = LLVMGetNextInstruction(instruction);
+    }
     return 1;
 }
 
@@ -159,7 +160,9 @@ int bb_build_phi(lua_State* L) {
     LLVMPositionBuilderBefore(builder, LLVMGetFirstInstruction(bb));
     LLVMValueRef phi = LLVMBuildPhi(builder, alloca_type, "phi");
     LLVMAddIncoming(phi, incoming_values, incoming_blocks, size);
-    return 0;
+
+    instruction_new(L, phi);
+    return 1;
 }
 
 int bb_replace_between(lua_State* L) {
@@ -170,17 +173,39 @@ int bb_replace_between(lua_State* L) {
     LLVMValueRef instruction = LLVMGetNextInstruction(a1);
     while (instruction && instruction != a2) {
         LLVMValueRef next = LLVMGetNextInstruction(instruction);
-        if (LLVMIsALoadInst(instruction)) {
-            if (LLVMGetOperand(instruction, 0) == alloca) {
-                // replace all usages of the load with the store's value
-                LLVMReplaceAllUsesWith(instruction, value);
-                LLVMInstructionEraseFromParent(instruction);
-            }
+        if (LLVMIsALoadInst(instruction) &&
+            LLVMGetOperand(instruction, 0) == alloca) {
+            // replace all uses of the load with the store's value
+            LLVMReplaceAllUsesWith(instruction, value);
+            LLVMInstructionEraseFromParent(instruction);
         }
         instruction = next;
     }
     if (LLVMIsAStoreInst(a1)) {
         LLVMInstructionEraseFromParent(a1);
+    }
+    return 0;
+}
+
+int bb_replace_loads(lua_State* L) {
+    LLVMBasicBlockRef block = getbasicblock(L, 1);
+    LLVMValueRef alloca = getinstruction(L, 2);
+    LLVMValueRef value = getinstruction(L, 3);
+
+    LLVMValueRef instruction = LLVMGetFirstInstruction(block);
+    while (instruction) {
+        LLVMValueRef next = LLVMGetNextInstruction(instruction);
+        if (LLVMIsALoadInst(instruction) &&
+            LLVMGetOperand(instruction, 0) == alloca) {
+            // replace all uses of the load with the store's value
+
+            LLVMDumpValue(instruction);
+            printf("\n");
+
+            LLVMReplaceAllUsesWith(instruction, value);
+            LLVMInstructionEraseFromParent(instruction);
+        }
+        instruction = next;
     }
     return 0;
 }

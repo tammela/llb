@@ -149,6 +149,7 @@ struct luaL_Reg bb_mt[] = {
     {"store_instructions", bb_store_instructions},
     {"build_phi", bb_build_phi},
     {"replace_between", bb_replace_between},
+    {"replace_loads", bb_replace_loads},
     {NULL, NULL}
 };
 
@@ -158,6 +159,7 @@ struct luaL_Reg inst_mt[] = {
     {"operands", instruction_operands},
     {"usages", instruction_usages},
     {"is_alloca", instruction_is_alloca},
+    {"is_phi", instruction_is_phi},
     {"is_store", instruction_is_store},
     {"is_load", instruction_is_load},
     {"replace_with", instruction_replace_with},

@@ -75,6 +75,12 @@ int instruction_is_alloca(lua_State* L) {
     return 1;
 }
 
+int instruction_is_phi(lua_State* L) {
+    LLVMValueRef instruction = getinstruction(L, 1);
+    lua_pushboolean(L, LLVMIsAPHINode(instruction) ? 1 : 0);
+    return 1;
+}
+
 int instruction_is_store(lua_State* L) {
     LLVMValueRef instruction = getinstruction(L, 1);
     lua_pushboolean(L, LLVMIsAStoreInst(instruction) ? 1 : 0);
