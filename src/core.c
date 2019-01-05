@@ -126,8 +126,6 @@ static int llb_write_bitcode(lua_State* L) {
 
 // clang-format off
 struct luaL_Reg module_mt[] = {
-    {"dispose", module_dispose},
-    {"get_builder", module_get_builder},
     {"__index", module_index},
     {"__pairs", module_pairs},
     {"__tostring", module_tostring},
@@ -188,6 +186,8 @@ int luaopen_core(lua_State* L) {
         {"load_ir", llb_load_ir},
         {"load_bitcode", llb_load_bitcode},
         {"write_bitcode", llb_write_bitcode},
+        {"dispose", module_dispose},
+        {"get_builder", module_get_builder},
         {"newclass", llb_newclass},
         {NULL, NULL}
     };
