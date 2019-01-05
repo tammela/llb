@@ -27,6 +27,11 @@
 #include "core.h"
 #include "function.h"
 
+// ==================================================
+//
+// __gc metamethod for the internal modules reference table
+//
+// ==================================================
 static int internal_modgc(lua_State* L) {
     lua_pushnil(L);
     while (lua_next(L, 1) != 0) {
@@ -36,7 +41,12 @@ static int internal_modgc(lua_State* L) {
     return 0;
 }
 
-static void build_modstable(lua_State* L) {
+// ==================================================
+//
+// creates a table to hold the module references
+//
+// ==================================================
+static void buildmodstable(lua_State* L) {
     struct luaL_Reg mt[] = {{"__gc", internal_modgc}, {NULL, NULL}};
     lua_newtable(L);
     lua_newtable(L);
@@ -44,11 +54,18 @@ static void build_modstable(lua_State* L) {
     lua_setmetatable(L, -2);
 }
 
+// ==================================================
+//
+// creates a new module userdata.
+// holds a reference table on the registry to free all modules
+// automatically when a lua state is closed.
+//
+// ==================================================
 int module_new(lua_State* L, LLVMModuleRef module) {
     newuserdata(L, module, LLB_MODULE);
     if (lua_getfield(L, LUA_REGISTRYINDEX, "internal_modules") == LUA_TNIL) {
         lua_pop(L, 1);
-        build_modstable(L);
+        buildmodstable(L);
         lua_pushvalue(L, -2);
         lua_pushboolean(L, 1);
         lua_settable(L, -3);
@@ -62,12 +79,22 @@ int module_new(lua_State* L, LLVMModuleRef module) {
     return 1;
 }
 
+// ==================================================
+//
+//  disposes a module explicitly
+//
+// ==================================================
 int module_dispose(lua_State* L) {
     LLVMModuleRef module = getmodule(L, 1);
     LLVMDisposeModule(module);
     return 0;
 }
 
+// ==================================================
+//
+// iterates over all functions in a module
+//
+// ==================================================
 static int module_iterator(lua_State* L) {
     LLVMModuleRef module = getmodule(L, 1);
     if (lua_isnil(L, 2)) {
@@ -90,6 +117,11 @@ static int module_iterator(lua_State* L) {
     return 2;
 }
 
+// ==================================================
+//
+// __pairs metamethod
+//
+// ==================================================
 int module_pairs(lua_State* L) {
     lua_pushcfunction(L, module_iterator);
     lua_pushvalue(L, 1);
@@ -97,6 +129,11 @@ int module_pairs(lua_State* L) {
     return 3;
 }
 
+// ==================================================
+//
+// __index metamethod
+//
+// ==================================================
 int module_index(lua_State* L) {
     LLVMModuleRef module = getmodule(L, 1);
     const char* key = luaL_checkstring(L, 2);
@@ -109,6 +146,11 @@ int module_index(lua_State* L) {
     return 1;
 }
 
+// ==================================================
+//
+// returns the IR builder of a module
+//
+// ==================================================
 int module_get_builder(lua_State* L) {
     LLVMModuleRef module = getmodule(L, 1);
     LLVMContextRef context = LLVMGetModuleContext(module);
@@ -117,6 +159,11 @@ int module_get_builder(lua_State* L) {
     return 1;
 }
 
+// ==================================================
+//
+// __tostring metamethod
+//
+// ==================================================
 int module_tostring(lua_State* L) {
     LLVMModuleRef module = getmodule(L, 1);
     size_t size;
