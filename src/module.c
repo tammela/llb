@@ -56,7 +56,7 @@ static void buildmodstable(lua_State* L) {
 
 // ==================================================
 //
-// creates a new module userdata.
+// instantiates a new module object.
 // holds a reference table on the registry to free all modules
 // automatically when a lua state is closed.
 //
