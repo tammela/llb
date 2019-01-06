@@ -125,6 +125,11 @@ int bb_store_instructions(lua_State* L) {
     return 1;
 }
 
+// ==================================================
+//
+// build a phi node
+//
+// ==================================================
 int bb_build_phi(lua_State* L) {
     LLVMBasicBlockRef bb = getbasicblock(L, 1);
     LLVMBuilderRef builder = getbuilder(L, 2);
@@ -165,6 +170,13 @@ int bb_build_phi(lua_State* L) {
     return 1;
 }
 
+// ==================================================
+//
+// replaces all uses of load, with alloca operands, to value.
+// the replacement procedure is bounded between a1 and a2.
+//
+// ==================================================
+// TODO: rename this function
 int bb_replace_between(lua_State* L) {
     LLVMValueRef a1 /* current "assign" instruction */ = getinstruction(L, 2);
     LLVMValueRef a2 /* next "assign" instruction    */ = getinstruction(L, 3);
@@ -175,7 +187,6 @@ int bb_replace_between(lua_State* L) {
         LLVMValueRef next = LLVMGetNextInstruction(instruction);
         if (LLVMIsALoadInst(instruction) &&
             LLVMGetOperand(instruction, 0) == alloca) {
-            // replace all uses of the load with the store's value
             LLVMReplaceAllUsesWith(instruction, value);
             LLVMInstructionEraseFromParent(instruction);
         }
@@ -187,6 +198,13 @@ int bb_replace_between(lua_State* L) {
     return 0;
 }
 
+// ==================================================
+//
+// replaces all uses of load, with alloca operands, to value.
+// the replacemente procedure is not bounded.
+//
+// ==================================================
+// TODO: rename this function
 int bb_replace_loads(lua_State* L) {
     LLVMBasicBlockRef block = getbasicblock(L, 1);
     LLVMValueRef alloca = getinstruction(L, 2);
@@ -197,8 +215,7 @@ int bb_replace_loads(lua_State* L) {
         LLVMValueRef next = LLVMGetNextInstruction(instruction);
         if (LLVMIsALoadInst(instruction) &&
             LLVMGetOperand(instruction, 0) == alloca) {
-            // replace all uses of the load with the store's value
-
+            // TODO: Remove below
             LLVMDumpValue(instruction);
             printf("\n");
 
