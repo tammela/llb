@@ -20,6 +20,10 @@
 
 local dot = {}
 
+--
+-- returns a graphviz representable format of a
+-- basic block graph
+--
 function dot:bbgraph(bbgraph, name)
     local file = {}
     table.insert(file, 'digraph "CFG for ' .. name .. ' function" {')
@@ -36,6 +40,10 @@ function dot:bbgraph(bbgraph, name)
     return table.concat(file, '\n')
 end
 
+--
+-- returns a graphviz representable format of a
+-- dominance graph
+--
 function dot:domgraph(dom, name)
     local file = {}
     table.insert(file, 'digraph "Dominance graph for ' .. name
@@ -56,6 +64,10 @@ function dot:domgraph(dom, name)
     return table.concat(file, '\n')
 end
 
+--
+-- returns a graphviz representable format of a
+-- imediate dominance graph
+--
 function dot:idomgraph(idom, name)
     local file = {}
     table.insert(file, 'digraph "Imediate Dominance graph for ' .. name
