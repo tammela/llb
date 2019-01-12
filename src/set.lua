@@ -21,7 +21,9 @@
 local set = {}
 set.__index = set -- TODO: why do we need this?
 
--- auxiliary
+--
+-- check if types match, if not creates a 'local' set
+--
 local function checkcast(a, b)
     local function f(x)
         return getmetatable(x) == set and x or set.new(table.unpack(x))
@@ -29,6 +31,9 @@ local function checkcast(a, b)
     return f(a), f(b)
 end
 
+--
+-- creates a new set object
+--
 function set.new(...)
     local t = {}
     setmetatable(t, set)
@@ -36,6 +41,9 @@ function set.new(...)
     return t
 end
 
+--
+-- copies a set, returns the new copy
+--
 function set:copy()
     local t = set.new()
     for e in pairs(self) do
@@ -44,18 +52,27 @@ function set:copy()
     return t
 end
 
+--
+-- adds n items to the set
+--
 function set:add(...)
     for _, e in ipairs({...}) do
         self[e] = e
     end
 end
 
+--
+-- removes n items from the set
+--
 function set:remove(...)
     for _, e in ipairs({...}) do
         self[e] = nil
     end
 end
 
+--
+-- pops a item from the set in no particular order
+--
 function set:pop()
     for _, v in pairs(self) do
         self:remove(v)
@@ -63,10 +80,16 @@ function set:pop()
     end
 end
 
+--
+-- is the set empty?
+--
 function set:is_empty()
     return next(self) == nil
 end
 
+--
+-- returns the size of the set
+--
 function set:size()
     local i = 0
     for _ in pairs(self) do
@@ -75,6 +98,9 @@ function set:size()
     return i
 end
 
+--
+-- does it contains these elements?
+--
 function set:contains(...)
     for _, e in ipairs({...}) do
         if self[e] == nil then
@@ -84,6 +110,10 @@ function set:contains(...)
     return true
 end
 
+--
+-- __tostring metamethod
+-- returns the set in a human understandable way
+--
 function set:__tostring()
     local t = {}
     for e in pairs(self) do
@@ -92,7 +122,11 @@ function set:__tostring()
     return "{" .. table.concat(t, ", ") .. "}"
 end
 
-function set.__add(a, b) -- union
+--
+-- __add metamethod
+-- returns a new set that it's the union of a and b
+--
+function set.__add(a, b)
     a, b = checkcast(a, b)
     local t = set.new()
     for e in pairs(a) do t:add(e) end
@@ -100,13 +134,21 @@ function set.__add(a, b) -- union
     return t
 end
 
-function set.__mul(a, b) -- intersection
+--
+-- __mul metamethod
+-- returns a new set that it's the intersection of a and b
+--
+function set.__mul(a, b)
     a, b = checkcast(a, b)
     local t = set.new()
     for e in pairs(a) do t:add(b[e]) end
     return t
 end
 
+--
+-- __sub metamethod
+-- returns a new set that it's the diference of a and b
+--
 function set.__sub(a, b)
     a, b = checkcast(a, b)
     local t = set.new()
@@ -118,6 +160,10 @@ function set.__sub(a, b)
     return t
 end
 
+--
+-- __eq metamethod
+-- are the sets exactly the same?
+--
 function set.__eq(a, b)
     local i = 0
     for e in pairs(a) do
