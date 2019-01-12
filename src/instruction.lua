@@ -20,9 +20,8 @@
 
 local instruction = {}
 
+--
 -- TODO
-function instruction:todo()
-    
-end
+--
 
 return instruction
