@@ -29,13 +29,14 @@ local fn = {}
 --
 -----------------------------------------------------
 
+--
 -- computes the predecessors-sucessors graph of a function
+--
 function fn:bbgraph(bbs)
     local bbs = bbs or self:basic_blocks()
     return bbgraph.new(bbs)
 end
 
--- TODO: local?
 function fn:map_instructions(bbgraph)
     local map, array = {}, {}
     local auxmap = {}
@@ -75,7 +76,9 @@ end
 --
 -----------------------------------------------------
 
+--
 -- t[bb][tostring(alloca)] => {store instructions}
+--
 local function bbstores(bbgraph)
     local t = {}
     for _, bb in ipairs(bbgraph) do
@@ -91,8 +94,10 @@ local function bbstores(bbgraph)
     return t
 end
 
+--
 -- returns f(bb, alloca)
 -- f returns the store instruction for the alloca that dominates bb
+--
 local function bbdomstores(bbstores, idom)
     local t = {}
     return function(bb, alloca)
@@ -118,8 +123,10 @@ local function bbdomstores(bbstores, idom)
     end
 end
 
+--
 -- replaces locally restricted store instructions
 -- removes the replaced store instructions from bbstores
+--
 local function replace_stores_locally(bbgraph, bbstores)
     for _, bb in ipairs(bbgraph) do
         for kalloca, assigns in pairs(bbstores[bb]) do
@@ -161,8 +168,10 @@ local function replace_stores_globally(bbgraph, bbstores, ridom, phis)
     end
 end
 
+--
 -- puts the IR in pruned SSA form
 -- removes and replaces useless alloca/store/load instructions
+--
 function fn:prunedssa(builder, bbgraph)
     local bbgraph = bbgraph or self:bbgraph()
     local dom = bbgraph:dom() -- TODO: check if necessary later
