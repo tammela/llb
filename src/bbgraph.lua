@@ -23,8 +23,10 @@ local set = require "set"
 local bbgraph = {}
 bbgraph.__index = bbgraph
 
+--
 -- receives a list of basic blocks
 -- returns the predecessors-sucessors graph for the basic blocks
+--
 function bbgraph.new(bbs)
     local nodes = {}
     setmetatable(nodes, bbgraph)
@@ -51,9 +53,11 @@ function bbgraph.new(bbs)
     return nodes
 end
 
+--
 -- dominators
 -- returns {node: set<node>}
 -- dom[a] = {a, b, c} ===> "a", b" and "c" dominate "a"
+--
 function bbgraph:dom()
     local all = set.new(table.unpack(self))
     local entry = self[1] -- TODO: is the entry bb always bbgraph[1]?
@@ -83,9 +87,11 @@ function bbgraph:dom()
     return dom
 end
 
+--
 -- strict dominance
 -- returns {node: set<node>}
 -- dom[a] = {b, c} ===> b" and "c" strictly dominate "a"
+--
 function bbgraph:sdom(dom)
     local sdom
     if dom ~= nil then
@@ -103,14 +109,16 @@ function bbgraph:sdom(dom)
     return sdom
 end
 
+--
 -- imediate dominance
 -- returns {node: node}
 -- TODO
+--
 function bbgraph:idom(dom)
     local dom = dom or self:dom()
 
     local all = set.new(table.unpack(self))
-    local entry = self[1] -- TODO: is the entry basic block always bbgraph[1]?
+    local entry = self[1] -- entry basic block is always bbgraph[1]
     local regular_nodes = all - {entry}
     local idom = {}
 
@@ -138,9 +146,11 @@ function bbgraph:idom(dom)
     return idom
 end
 
+--
 -- reverse idom
 -- returns {node: set<node>}
 -- TODO
+--
 function bbgraph:ridom(idom)
     local idom = idom or self:idom()
     local ridom = {}
@@ -156,9 +166,10 @@ function bbgraph:ridom(idom)
     return ridom
 end
 
+--
 -- dominance frontier (FIXME: this is the quadratic version)
 -- TODO
--- TODO
+--
 function bbgraph:df(dom, sdom)
     local dom = dom or self:dom()
     local sdom = sdom or self:sdom(dom)
@@ -183,9 +194,11 @@ function bbgraph:df(dom, sdom)
     return df
 end
 
+--
 -- computes the iterated dominance frontier (DF+) of nodes in S
 -- "if S is the set of nodes that assign to variable x then DF+(S) is exactly
 -- the set of nodes that need phi-functions for x"
+--
 function bbgraph:dfplus(s, df)
     local df = df or self:df()
 
@@ -220,6 +233,10 @@ function bbgraph:dfplus(s, df)
     return dfp
 end
 
+--
+-- __tostring metamethod
+-- returns a human readable basic block graph
+--
 function bbgraph:__tostring()
     local nodes = {}
     for _, node in ipairs(self) do
