@@ -24,6 +24,7 @@
 
 #include <llvm-c/Core.h>
 
+#include "bb.h"
 #include "core.h"
 #include "instruction.h"
 
@@ -35,6 +36,16 @@
 int instruction_new(lua_State* L, LLVMValueRef instruction) {
     newuserdata(L, instruction, LLB_INSTRUCTION);
     return 1;
+}
+
+// ==================================================
+//
+// returns the bb who owns this instruction
+//
+// ==================================================
+int instruction_parent(lua_State* L) {
+    LLVMValueRef instruction = getinstruction(L, 1);
+    return bb_new(L, LLVMGetInstructionParent(instruction));
 }
 
 // ==================================================

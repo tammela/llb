@@ -22,6 +22,7 @@
 #define _LLB_INSTRUCTION_H
 
 extern int instruction_new(lua_State*, LLVMValueRef);
+extern int instruction_parent(lua_State*);
 extern int instruction_pointer(lua_State*);
 extern int instruction_label(lua_State*);
 extern int instruction_operands(lua_State*);

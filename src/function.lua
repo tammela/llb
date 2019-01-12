@@ -134,30 +134,21 @@ local function replace_stores_locally(bbgraph, bbstores)
     end
 end
 
-local function walk(block, siblings, store, phis)
-    local phiblocks
-    for alloca, blocks in pairs(phis) do
-        if tostring(store.alloca) == tostring(alloca.ref) then
-            phiblocks = blocks
-            break
-        end
-    end
-    for sibling in pairs(siblings[block]) do
-        if not phiblocks:contains(sibling) then
-            block.ref:replace_loads(store.alloca, store.value)
-            walk(sibling, siblings, store, phis)
-        end
-    end
-end
+local function replace_stores_globally(lastassign)
+    for i = 1, #lastassign do
+        local instruction = lastassign[i].instruction
+        if instruction:is_store() then
+           local bb = instruction:parent()
+           local operands = instruction:operands()
 
--- TODO
-local function replace_stores_globally(bbgraph, bbstores, ridom, phis)
-    for _, block in ipairs(bbgraph) do
-        for kalloca, store in pairs(bbstores[block]) do
-            walk(block, ridom, store, phis)
-            store.reference:delete()
+           bb:replace_loads(lastassign[i].alloca, operands[1])
+        elseif instruction:is_phi() then
+           local bb = instruction:parent()
+
+           bb:replace_loads(lastassign[i].alloca, instruction)
+        else
+           print("unknown instruction")
         end
-        bbstores[block] = nil
     end
 end
 
@@ -192,16 +183,19 @@ function fn:prunedssa(builder, bbgraph)
     end
 
     -- building phis
+    local lastassign = {}
     for alloca, phis in pairs(phis) do
         local kalloca = tostring(alloca.ref)
         for block in pairs(phis) do
             local incomings = {}
             for predecessor in pairs(block.predecessors) do
                 local last = bbstores[predecessor][kalloca]
-                local store = last or bbdomstores(predecessor, alloca)
+                    or bbdomstores(predecessor, alloca)
                 local incoming = {predecessor.ref}
-                if store ~= nil then
-                    table.insert(incoming, 1, store.value)
+                if last then
+                    lastassign[#lastassign + 1] =
+                        {instruction = last, alloca = alloca}
+                    table.insert(incoming, 1, last.value)
                 end
                 table.insert(incomings, incoming)
             end
@@ -211,7 +205,7 @@ function fn:prunedssa(builder, bbgraph)
         end
     end
 
-    replace_stores_globally(bbgraph, bbstores, ridom, phis)
+    replace_stores_globally(lastassign)
 end
 
 return fn

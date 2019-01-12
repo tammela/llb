@@ -55,7 +55,7 @@ end
 -- end
 
 do -- prunedssa
-    local builder = getmetatable(module).get_builder(module)
+    local builder = llb.get_builder(module)
     assert(builder)
     local bbgraph = main:bbgraph()
     local phis = main:prunedssa(builder, bbgraph)
