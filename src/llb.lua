@@ -20,6 +20,9 @@
 
 local llb = require "core"
 
+--
+-- creates all objects classes
+--
 do
     llb.newclass({}, "module")
     llb.newclass(require("function"), "function")
