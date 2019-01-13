@@ -35,4 +35,7 @@ extern int instruction_delete(lua_State*);
 extern int instruction_equals(lua_State*);
 extern int instruction_tostring(lua_State*);
 
+// TODO
+extern int instruction_add_incoming(lua_State*);
+
 #endif

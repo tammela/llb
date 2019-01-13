@@ -18,6 +18,7 @@
  * along with llb. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <assert.h>
 #include <lauxlib.h>
 #include <lua.h>
 #include <stdlib.h>
@@ -164,4 +165,45 @@ int instruction_tostring(lua_State* L) {
     lua_pushstring(L, str);
     LLVMDisposeMessage(str);
     return 1;
+}
+
+// ==================================================
+//
+//  TODO
+//
+// ==================================================
+int instruction_add_incoming(lua_State* L) {
+    LLVMValueRef phi = getinstruction(L, 1);
+    assert(LLVMIsAPHINode(phi));
+    LLVMValueRef alloca = getinstruction(L, 2);
+
+    LLVMValueRef undef = LLVMGetUndef(LLVMGetAllocatedType(alloca));
+
+    int size = luaL_len(L, 3);
+    LLVMValueRef incoming_values[size];
+    LLVMBasicBlockRef incoming_blocks[size];
+
+    for (int i = 0; i < size; i++) {
+        lua_geti(L, 3, i + 1);
+        switch (luaL_len(L, -1)) {
+            case 1:
+                incoming_values[i] = undef;
+                lua_geti(L, -1, 1);
+                incoming_blocks[i] = getbasicblock(L, -1);
+                break;
+            case 2:
+                lua_geti(L, -1, 1);
+                incoming_values[i] = getinstruction(L, -1);
+                lua_pop(L, 1);
+                lua_geti(L, -1, 2);
+                incoming_blocks[i] = getbasicblock(L, -1);
+                break;
+            default:
+                UNREACHABLE;
+        }
+        lua_pop(L, 2);
+    }
+
+    LLVMAddIncoming(phi, incoming_values, incoming_blocks, size);
+    return 0;
 }

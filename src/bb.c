@@ -87,6 +87,20 @@ int bb_instructions(lua_State* L) {
     return 1;
 }
 
+// TODO
+int bb_first_instruction(lua_State* L) {
+    LLVMBasicBlockRef bb = getbasicblock(L, 1);
+    LLVMValueRef first = LLVMGetFirstInstruction(bb);
+    return instruction_new(L, first);
+}
+
+// TODO
+int bb_last_instruction(lua_State* L) {
+    LLVMBasicBlockRef bb = getbasicblock(L, 1);
+    LLVMValueRef last = LLVMGetLastInstruction(bb);
+    return instruction_new(L, last);
+}
+
 // ==================================================
 //
 // __tostring metamethod
@@ -134,40 +148,10 @@ int bb_build_phi(lua_State* L) {
     LLVMBasicBlockRef bb = getbasicblock(L, 1);
     LLVMBuilderRef builder = getbuilder(L, 2);
     LLVMValueRef alloca = getinstruction(L, 3);
-
-    LLVMTypeRef alloca_type = LLVMGetAllocatedType(alloca);
-
-    int size = luaL_len(L, 4);
-    LLVMValueRef incoming_values[size];
-    LLVMBasicBlockRef incoming_blocks[size];
-
-    for (int i = 0; i < size; i++) {
-        lua_geti(L, 4, i + 1);
-        switch (luaL_len(L, -1)) {
-            case 1:
-                incoming_values[i] = LLVMGetUndef(alloca_type);
-                lua_geti(L, -1, 1);
-                incoming_blocks[i] = getbasicblock(L, -1);
-                break;
-            case 2:
-                lua_geti(L, -1, 1);
-                incoming_values[i] = getinstruction(L, -1);
-                lua_pop(L, 1);
-                lua_geti(L, -1, 2);
-                incoming_blocks[i] = getbasicblock(L, -1);
-                break;
-            default:
-                UNREACHABLE;
-        }
-        lua_pop(L, 2);
-    }
-
     LLVMPositionBuilderBefore(builder, LLVMGetFirstInstruction(bb));
-    LLVMValueRef phi = LLVMBuildPhi(builder, alloca_type, "phi");
-    LLVMAddIncoming(phi, incoming_values, incoming_blocks, size);
-
-    instruction_new(L, phi);
-    return 1;
+    LLVMTypeRef type = LLVMGetAllocatedType(alloca);
+    LLVMValueRef phi = LLVMBuildPhi(builder, type, "phi");
+    return instruction_new(L, phi);
 }
 
 // ==================================================
@@ -182,7 +166,7 @@ int bb_replace_between(lua_State* L) {
     LLVMValueRef a2 /* next "assign" instruction    */ = getinstruction(L, 3);
     LLVMValueRef value = getinstruction(L, 4);
     LLVMValueRef alloca = getinstruction(L, 5);
-    LLVMValueRef instruction = LLVMGetNextInstruction(a1);
+    LLVMValueRef instruction = a1;
     while (instruction && instruction != a2) {
         LLVMValueRef next = LLVMGetNextInstruction(instruction);
         if (LLVMIsALoadInst(instruction) &&
@@ -191,9 +175,6 @@ int bb_replace_between(lua_State* L) {
             LLVMInstructionEraseFromParent(instruction);
         }
         instruction = next;
-    }
-    if (LLVMIsAStoreInst(a1)) {
-        LLVMInstructionEraseFromParent(a1);
     }
     return 0;
 }

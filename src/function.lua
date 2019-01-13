@@ -23,6 +23,15 @@ local bbgraph = require "bbgraph"
 
 local fn = {}
 
+-- TODO
+function tablecopy(a)
+    local b = {}
+    for k, v in pairs(a) do
+        b[k] = v
+    end
+    return b
+end
+
 -----------------------------------------------------
 --
 --  functions
@@ -37,6 +46,7 @@ function fn:bbgraph(bbs)
     return bbgraph.new(bbs)
 end
 
+-- TODO: this is a local function
 function fn:map_instructions(bbgraph)
     local map, array = {}, {}
     local auxmap = {}
@@ -96,7 +106,7 @@ end
 
 --
 -- returns f(bb, alloca)
--- f returns the store instruction for the alloca that dominates bb
+-- f returns the store instruction that dominates bb for the alloca
 --
 local function bbdomstores(bbstores, idom)
     local t = {}
@@ -132,39 +142,17 @@ local function replace_stores_locally(bbgraph, bbstores)
         for kalloca, assigns in pairs(bbstores[bb]) do
             while #assigns > 1 do
                 local current, next = assigns[1], assigns[2]
-                bb.ref:replace_between(current.reference, next.reference,
-                    current.value, current.alloca)
+                bb.ref:replace_between(
+                    current.reference,
+                    next.reference,
+                    current.value,
+                    current.alloca
+                )
+                current.reference:delete()
                 table.remove(assigns, 1)
             end
             bbstores[bb][kalloca] = bbstores[bb][kalloca][1]
         end
-    end
-end
-
-local function walk(block, siblings, store, phis)
-    local phiblocks
-    for alloca, blocks in pairs(phis) do
-        if tostring(store.alloca) == tostring(alloca.ref) then
-            phiblocks = blocks
-            break
-        end
-    end
-    for sibling in pairs(siblings[block]) do
-        if not phiblocks:contains(sibling) then
-            block.ref:replace_loads(store.alloca, store.value)
-            walk(sibling, siblings, store, phis)
-        end
-    end
-end
-
--- TODO
-local function replace_stores_globally(bbgraph, bbstores, ridom, phis)
-    for _, block in ipairs(bbgraph) do
-        for kalloca, store in pairs(bbstores[block]) do
-            walk(block, ridom, store, phis)
-            store.reference:delete()
-        end
-        bbstores[block] = nil
     end
 end
 
@@ -178,49 +166,173 @@ function fn:prunedssa(builder, bbgraph)
     local idom = bbgraph:idom(dom)
     local ridom = bbgraph:ridom(idom)
 
-    local instructions = self:map_instructions(bbgraph)
+    local instructions, instructions_array = self:map_instructions(bbgraph)
     local bbstores = bbstores(bbgraph)
     local bbdomstores = bbdomstores(bbstores, idom)
 
     replace_stores_locally(bbgraph, bbstores)
 
-    -- for each alloca
-    local phis = {}
+    -- allocas
+    local allocas = {}
     for _, instruction in pairs(instructions) do
         if instruction.ref:is_alloca() then
-            -- if S is the set of nodes that store with the alloca
-            local S = set.new()
-            for _, usage in pairs(instruction.usages) do
-                if usage.ref:is_store() then
-                    S:add(usage.bb)
-                end
-            end
-            -- DF+(S) is the set of nodes that need phi-functions for the alloca
-            phis[instruction] = bbgraph:dfplus(S)
+            table.insert(allocas, instruction)
         end
     end
 
-    -- building phis
-    for alloca, phis in pairs(phis) do
-        local kalloca = tostring(alloca.ref)
-        for block in pairs(phis) do
-            local incomings = {}
-            for predecessor in pairs(block.predecessors) do
-                local last = bbstores[predecessor][kalloca]
-                local store = last or bbdomstores(predecessor, alloca)
-                local incoming = {predecessor.ref}
-                if store ~= nil then
-                    table.insert(incoming, 1, store.value)
-                end
-                table.insert(incomings, incoming)
+    -- phiblocks[alloca] = set<block>
+    local phiblocks = {}
+    for _, alloca in ipairs(allocas) do
+        -- if S is the set of nodes that store with the alloca
+        local S = set.new()
+        for _, usage in pairs(alloca.usages) do
+            if usage.ref:is_store() then
+                S:add(usage.bb)
             end
-            local phi = block.ref:build_phi(builder, alloca.ref, incomings)
-            local value = bbstores[block][kalloca] or phi
-            block.ref:replace_between(phi, value, phi, alloca.ref)
+        end
+        -- DF+(S) is the set of nodes that need phi-functions for the alloca
+        phiblocks[alloca] = bbgraph:dfplus(S)
+    end
+
+    do -- phiblocks[block] = set<alloca>
+        local t = {}
+        for _, block in ipairs(bbgraph) do
+            t[block] = set.new()
+        end
+        for alloca, blocks in pairs(phiblocks) do
+            for block in pairs(blocks) do
+                t[block]:add(alloca)
+            end
+        end
+        phiblocks = t
+    end
+
+    -- ridom walking
+    local function ridomwalk(block, f)
+        f(block)
+        for successor in pairs(ridom[block]) do
+            ridomwalk(successor, f)
         end
     end
 
-    replace_stores_globally(bbgraph, bbstores, ridom, phis)
+    -- TODO
+    local function incoming(phiblock, alloca)
+        local t = {}
+        for predecessor in pairs(phiblock.predecessors) do
+            local last = bbstores[predecessor][tostring(alloca.ref)]
+            local store = last or bbdomstores(predecessor, alloca)
+            local incoming = {predecessor.ref}
+            if store ~= nil then
+                table.insert(incoming, 1, store.value)
+            end
+            table.insert(t, incoming)
+        end
+        return t
+    end
+
+    -- build phis
+    local phis = {}
+    ridomwalk(bbgraph[1], function(block)
+        local allocas = phiblocks[block]
+
+        -- if there are no phis to place in the current block
+        if allocas:is_empty() then
+            return
+        end
+
+        -- placing phis for each alloca
+        for alloca in pairs(allocas) do
+            local kalloca = tostring(alloca.ref)
+            local phi = block.ref:build_phi(builder, alloca.ref)
+            phis[tostring(block.ref) .. kalloca] = phi
+
+            local a2
+            if bbstores[block][kalloca] ~= nil then
+                a2 = bbstores[block][kalloca]
+            else
+                a2 = phi
+                bbstores[block][kalloca] = {
+                    reference = phi,
+                    value = phi,
+                    alloca = alloca
+                }
+            end
+            block.ref:replace_between(phi, a2, phi, alloca.ref)
+        end
+    end)
+
+    -- add incoming
+    ridomwalk(bbgraph[1], function(block)
+        local allocas = phiblocks[block]
+
+        -- if no phis were to placed in the current block
+        if allocas:is_empty() then
+            return
+        end
+
+        -- add each incoming
+        for alloca in pairs(allocas) do
+            local phi = phis[tostring(block.ref) .. tostring(alloca.ref)]
+            phi:add_incoming(alloca.ref, incoming(block, alloca))
+        end
+    end)
+
+    -- replace last loads
+    local previous_map = {} -- previous_map[alloca] = assignment
+    local function todo(block)
+        for _, alloca in ipairs(allocas) do
+            local previous = previous_map[alloca]
+            local current = bbstores[block][tostring(alloca.ref)]
+            local a1, a2, value
+            if previous == nil and current ~= nil then
+                -- replace [current, END] with current.value
+                a1 = current.reference
+                a2 = block.ref:last_instruction()
+                value = current.value
+                block.ref:replace_between(a1, a2, value, alloca.ref)
+                -- previous = current
+                previous_map[alloca] = current
+            elseif previous ~= nil and current == nil then
+                -- replace [START, END] with previous.value
+                a1 = block.ref:first_instruction()
+                a2 = block.ref:last_instruction()
+                value = previous.value
+                block.ref:replace_between(a1, a2, value, alloca.ref)
+            elseif previous ~= nil and current ~= nil then
+                -- replace [START, current] with previous.value
+                a1 = block.ref:first_instruction()
+                a2 = current.reference
+                value = previous.value
+                block.ref:replace_between(a1, a2, value, alloca.ref) 
+                -- replace [current, END] with current.value
+                a1 = current.reference
+                a2 = block.ref:last_instruction()
+                value = current.value
+                block.ref:replace_between(a1, a2, value, alloca.ref)
+                -- previous = current
+                previous_map[alloca] = current
+            end
+        end
+
+        for successor in pairs(ridom[block]) do
+            local temp = tablecopy(previous_map)
+            todo(successor)
+            previous_map = temp
+        end
+    end
+    todo(bbgraph[1])
+
+    -- delete stores
+    for _, block in ipairs(bbgraph) do
+        for _, store in ipairs(block.ref:store_instructions()) do
+            store.reference:delete()
+        end
+    end
+
+    -- delete allocas
+    for _, alloca in ipairs(allocas) do
+        alloca.ref:delete()
+    end
 end
 
 return fn

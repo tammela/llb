@@ -143,6 +143,8 @@ struct luaL_Reg bb_mt[] = {
     {"pointer", bb_pointer},
     {"successors", bb_successors},
     {"instructions", bb_instructions},
+    {"first_instruction", bb_first_instruction},
+    {"last_instruction", bb_last_instruction},
     {"__tostring", bb_tostring},
     // TODO: WIP
     {"store_instructions", bb_store_instructions},
@@ -165,6 +167,8 @@ struct luaL_Reg inst_mt[] = {
     {"delete", instruction_delete},
     {"__eq", instruction_equals},
     {"__tostring", instruction_tostring},
+    // TODO
+    {"add_incoming", instruction_add_incoming},
     {NULL, NULL}
 };
 

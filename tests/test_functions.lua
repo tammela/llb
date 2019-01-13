@@ -58,7 +58,7 @@ do -- prunedssa
     local builder = getmetatable(module).get_builder(module)
     assert(builder)
     local bbgraph = main:bbgraph()
-    local phis = main:prunedssa(builder, bbgraph)
+    main:prunedssa(builder, bbgraph)
     llb.write_bitcode(module, "testando.bc")
 end
 
