@@ -48,15 +48,13 @@ end
 
 -- TODO: this is a local function
 function fn:map_instructions(bbgraph)
-    local map, array = {}, {}
+    local map = {}
     local auxmap = {}
 
     -- getting all instructions
     local i = 1
     for _, bb in ipairs(bbgraph) do
-        array[bb] = {}
         for _, inst in ipairs(bb.ref:instructions()) do
-            table.insert(array[bb], inst)
             map[inst] = {
                 id = i,
                 bb = bb,
@@ -77,7 +75,7 @@ function fn:map_instructions(bbgraph)
         end
     end
 
-    return map, array
+    return map
 end
 
 -----------------------------------------------------
@@ -166,7 +164,7 @@ function fn:prunedssa(builder, bbgraph)
     local idom = bbgraph:idom(dom)
     local ridom = bbgraph:ridom(idom)
 
-    local instructions, instructions_array = self:map_instructions(bbgraph)
+    local instructions = self:map_instructions(bbgraph)
     local bbstores = bbstores(bbgraph)
     local bbdomstores = bbdomstores(bbstores, idom)
 
@@ -234,18 +232,15 @@ function fn:prunedssa(builder, bbgraph)
     local phis = {}
     ridomwalk(bbgraph[1], function(block)
         local allocas = phiblocks[block]
-
         -- if there are no phis to place in the current block
         if allocas:is_empty() then
             return
         end
-
         -- placing phis for each alloca
         for alloca in pairs(allocas) do
             local kalloca = tostring(alloca.ref)
             local phi = block.ref:build_phi(builder, alloca.ref)
             phis[tostring(block.ref) .. kalloca] = phi
-
             local a2
             if bbstores[block][kalloca] ~= nil then
                 a2 = bbstores[block][kalloca]
@@ -264,12 +259,10 @@ function fn:prunedssa(builder, bbgraph)
     -- add incoming
     ridomwalk(bbgraph[1], function(block)
         local allocas = phiblocks[block]
-
         -- if no phis were to placed in the current block
         if allocas:is_empty() then
             return
         end
-
         -- add each incoming
         for alloca in pairs(allocas) do
             local phi = phis[tostring(block.ref) .. tostring(alloca.ref)]
@@ -323,6 +316,7 @@ function fn:prunedssa(builder, bbgraph)
     todo(bbgraph[1])
 
     -- delete stores
+    -- TODO: this is wrong, what about malloca stores?
     for _, block in ipairs(bbgraph) do
         for _, store in ipairs(block.ref:store_instructions()) do
             store.reference:delete()

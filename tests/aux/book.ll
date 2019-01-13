@@ -40,7 +40,7 @@ b4:
     ; y = 3
     store i32 3, i32* %y
 
-    ; TODO: this causes llvm to get stuck in a infinite loop
+    ; TODO: this causes llvm-dis to get stuck in a infinite loop (or segfault)
     ; a = y
     ; %load-1-y = load i32, i32* %y
     ; store i32 %load-1-y, i32* %a

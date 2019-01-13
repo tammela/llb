@@ -34,8 +34,8 @@ b6:                                               ; preds = %b5
   br label %exit
 
 exit:                                             ; preds = %b6, %b4
-  %phi3 = phi i32 [ 1, %b4 ], [ %sum-x-7, %b6 ]
+  %phi3 = phi i32 [ 1, %b4 ], [ %phi, %b6 ]
   %phi2 = phi i32 [ %sum-y-1, %b4 ], [ undef, %b6 ]
-  %phi1 = phi i32 [ 1, %b4 ], [ %phi, %b6 ]
+  %phi1 = phi i32 [ 1, %b4 ], [ %sum-x-7, %b6 ]
   ret void
 }
