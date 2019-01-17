@@ -23,73 +23,8 @@ local bbgraph = require "bbgraph"
 
 local fn = {}
 
--- TODO
-function tablecopy(a)
-    local b = {}
-    for k, v in pairs(a) do
-        b[k] = v
-    end
-    return b
-end
-
------------------------------------------------------
 --
---  functions
---
------------------------------------------------------
-
---
--- computes the predecessors-sucessors graph of a function
---
-function fn:bbgraph(bbs)
-    local bbs = bbs or self:basic_blocks()
-    return bbgraph.new(bbs)
-end
-
------------------------------------------------------
---
---  prunedssa & auxiliary functions
---
------------------------------------------------------
-
-local function filter(t, f)
-    local u = {}
-    for k, v in pairs(t) do
-        if f(v) then
-            u[k] = v
-        end
-    end
-    return u
-end
-
-local function map_instructions(bbgraph)
-    local instructions, aux = set.new(), {}
-    for _, block in ipairs(bbgraph) do
-        for _, reference in ipairs(block.ref:instructions()) do
-            local instruction = {
-                block = block,
-                ref = reference,
-                usages = set.new(),
-                stores = set.new(),
-            }
-            instructions:add(instruction)
-            aux[reference:pointer()] = instruction
-        end
-    end
-    for instruction in pairs(instructions) do
-        for _, usage in ipairs(instruction.ref:usages()) do
-            local usage_instruction = aux[usage]
-            instruction.usages:add(usage_instruction)
-            if usage_instruction.ref:is_store() then
-                instruction.stores:add(usage_instruction)
-            end
-        end
-    end
-    return instructions
-end
-
---
--- t[bb][tostring(alloca)] => {store instructions}
+-- returns t[bb][tostring(alloca)] => {store instructions}
 --
 local function bbstores(bbgraph)
     local t = {}
@@ -159,16 +94,23 @@ local function replace_stores_locally(bbgraph, bbstores)
 end
 
 --
+-- computes the predecessors-sucessors graph of a function
+--
+function fn:bbgraph(bbs)
+    local bbs = bbs or self:basic_blocks()
+    return bbgraph.new(bbs)
+end
+
+--
 -- puts the IR in pruned SSA form
 -- removes and replaces useless alloca/store/load instructions
 --
 function fn:prunedssa(builder, bbgraph)
     local bbgraph = bbgraph or self:bbgraph()
-    local dom = bbgraph:dom() -- TODO: check if necessary later
-    local idom = bbgraph:idom(dom)
+    local idom = bbgraph:idom()
     local ridom = bbgraph:ridom(idom)
 
-    local instructions = map_instructions(bbgraph)
+    local instructions = bbgraph:map_instructions()
     local bbstores = bbstores(bbgraph)
     local bbdomstores = bbdomstores(bbstores, idom)
 
@@ -292,7 +234,7 @@ function fn:prunedssa(builder, bbgraph)
                 a1 = block.ref:first_instruction()
                 a2 = current.reference
                 value = previous.value
-                block.ref:replace_between(a1, a2, value, alloca.ref) 
+                block.ref:replace_between(a1, a2, value, alloca.ref)
                 -- replace [current, END] with current.value
                 a1 = current.reference
                 a2 = block.ref:last_instruction()
@@ -304,9 +246,9 @@ function fn:prunedssa(builder, bbgraph)
         end
 
         for successor in pairs(ridom[block]) do
-            local temp = tablecopy(previous_map)
+            local tmp = table.copy(previous_map)
             todo(successor)
-            previous_map = temp
+            previous_map = tmp
         end
     end
     todo(bbgraph[1])

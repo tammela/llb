@@ -234,6 +234,36 @@ function bbgraph:dfplus(s, df)
 end
 
 --
+-- returns set<{[block], [ref], [usages], [stores]}>
+-- for all instructions in a bb graph
+--
+function bbgraph:map_instructions()
+    local instructions, aux = set.new(), {}
+    for _, block in ipairs(self) do
+        for _, reference in ipairs(block.ref:instructions()) do
+            local instruction = {
+                block = block,
+                ref = reference,
+                usages = set.new(),
+                stores = set.new(),
+            }
+            instructions:add(instruction)
+            aux[reference:pointer()] = instruction
+        end
+    end
+    for instruction in pairs(instructions) do
+        for _, usage in ipairs(instruction.ref:usages()) do
+            local usage_instruction = aux[usage]
+            instruction.usages:add(usage_instruction)
+            if usage_instruction.ref:is_store() then
+                instruction.stores:add(usage_instruction)
+            end
+        end
+    end
+    return instructions
+end
+
+--
 -- __tostring metamethod
 -- returns a human readable basic block graph
 --

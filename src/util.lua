@@ -18,18 +18,31 @@
 -- along with llb. If not, see <http://www.gnu.org/licenses/>.
 --
 
-local llb = require "core"
-local util = require "util"
+local util = {}
 
 --
--- creates all objects classes
+-- returns a copy of a table
 --
-do
-    llb.newclass({}, "module")
-    llb.newclass(require("function"), "function")
-    llb.newclass({}, "basicblock")
-    llb.newclass(require("instruction"), "instruction")
-    llb.newclass({}, "builder")
+function table.copy(a)
+    local b = {}
+    for k, v in pairs(a) do
+        b[k] = v
+    end
+    return b
 end
 
-return llb
+--
+-- return a table of all the elements filtered of obj
+-- obj can be any object but it must have an pairs iterator
+--
+function util.filter(obj, f)
+    local u = {}
+    for k, v in pairs(obj) do
+        if f(v) then
+            u[k] = v
+        end
+    end
+    return u
+end
+
+return util
