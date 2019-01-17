@@ -46,43 +46,47 @@ function fn:bbgraph(bbs)
     return bbgraph.new(bbs)
 end
 
--- TODO: this is a local function
-function fn:map_instructions(bbgraph)
-    local map = {}
-    local auxmap = {}
-
-    -- getting all instructions
-    local i = 1
-    for _, bb in ipairs(bbgraph) do
-        for _, inst in ipairs(bb.ref:instructions()) do
-            map[inst] = {
-                id = i,
-                bb = bb,
-                ref = inst,
-                usages = {}
-            }
-            auxmap[inst:pointer()] = map[inst]
-            i = i + 1
-        end
-    end
-
-    -- mapping usages.
-    -- where the result of the instruction is used as an argument
-    for _, inst in pairs(map) do
-        for _, u in ipairs(inst.ref:usages()) do
-            local usage = auxmap[u]
-            table.insert(inst.usages, usage)
-        end
-    end
-
-    return map
-end
-
 -----------------------------------------------------
 --
 --  prunedssa & auxiliary functions
 --
 -----------------------------------------------------
+
+local function filter(t, f)
+    local u = {}
+    for k, v in pairs(t) do
+        if f(v) then
+            u[k] = v
+        end
+    end
+    return u
+end
+
+local function map_instructions(bbgraph)
+    local instructions, aux = set.new(), {}
+    for _, block in ipairs(bbgraph) do
+        for _, reference in ipairs(block.ref:instructions()) do
+            local instruction = {
+                block = block,
+                ref = reference,
+                usages = set.new(),
+                stores = set.new(),
+            }
+            instructions:add(instruction)
+            aux[reference:pointer()] = instruction
+        end
+    end
+    for instruction in pairs(instructions) do
+        for _, usage in ipairs(instruction.ref:usages()) do
+            local usage_instruction = aux[usage]
+            instruction.usages:add(usage_instruction)
+            if usage_instruction.ref:is_store() then
+                instruction.stores:add(usage_instruction)
+            end
+        end
+    end
+    return instructions
+end
 
 --
 -- t[bb][tostring(alloca)] => {store instructions}
@@ -164,30 +168,22 @@ function fn:prunedssa(builder, bbgraph)
     local idom = bbgraph:idom(dom)
     local ridom = bbgraph:ridom(idom)
 
-    local instructions = self:map_instructions(bbgraph)
+    local instructions = map_instructions(bbgraph)
     local bbstores = bbstores(bbgraph)
     local bbdomstores = bbdomstores(bbstores, idom)
 
     replace_stores_locally(bbgraph, bbstores)
 
     -- allocas
-    local allocas = {}
-    for _, instruction in pairs(instructions) do
-        if instruction.ref:is_alloca() then
-            table.insert(allocas, instruction)
-        end
-    end
+    local allocas = instructions:filter(function(e)
+        return e.ref:is_alloca()
+    end)
 
     -- phiblocks[alloca] = set<block>
     local phiblocks = {}
-    for _, alloca in ipairs(allocas) do
+    for alloca in pairs(allocas) do
         -- if S is the set of nodes that store with the alloca
-        local S = set.new()
-        for _, usage in pairs(alloca.usages) do
-            if usage.ref:is_store() then
-                S:add(usage.bb)
-            end
-        end
+        local S = alloca.stores:map(function(store) return store.block end)
         -- DF+(S) is the set of nodes that need phi-functions for the alloca
         phiblocks[alloca] = bbgraph:dfplus(S)
     end
@@ -273,7 +269,7 @@ function fn:prunedssa(builder, bbgraph)
     -- replace last loads
     local previous_map = {} -- previous_map[alloca] = assignment
     local function todo(block)
-        for _, alloca in ipairs(allocas) do
+        for alloca in pairs(allocas) do
             local previous = previous_map[alloca]
             local current = bbstores[block][tostring(alloca.ref)]
             local a1, a2, value
@@ -324,7 +320,7 @@ function fn:prunedssa(builder, bbgraph)
     end
 
     -- delete allocas
-    for _, alloca in ipairs(allocas) do
+    for alloca in pairs(allocas) do
         alloca.ref:delete()
     end
 end

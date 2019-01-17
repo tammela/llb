@@ -111,6 +111,30 @@ function set:contains(...)
 end
 
 --
+-- returns a mapped copy of the set
+--
+function set:map(f)
+    local new = set.new()
+    for e in pairs(self) do
+        new:add(f(e))
+    end
+    return new
+end
+
+--
+-- returns a filtered copy of the set
+--
+function set:filter(f)
+    local new = set.new()
+    for e in pairs(self) do
+        if f(e) then
+            new:add(e)
+        end
+    end
+    return new
+end
+
+--
 -- __tostring metamethod
 -- returns the set in a human understandable way
 --
@@ -172,11 +196,7 @@ function set.__eq(a, b)
         end
         i = i + 1
     end
-    local j = 0
-    for _ in pairs(b) do
-        j = j + 1
-    end
-    return i == j
+    return i == b:size()
 end
 
 return set

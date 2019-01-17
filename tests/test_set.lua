@@ -134,6 +134,25 @@ end
 
 -- is_empty & size & contains (tested above)
 
+do -- map
+    local s = set.new(1, 2, 3)
+    assert(s == s:map(function(e) return e end))
+    assert(s:map(function(e) return 2 * e end) == set.new(2, 4, 6))
+    assert(s:map(function(e) return "a" end) == set.new("a", "a", "a"))
+    assert(s:map(tostring) == set.new("1", "2", "3"))
+
+    local t = set.new("a", "b")
+    assert(t:map(function(e) return e .. "x" end) == set.new("ax", "bx"))
+end
+
+do -- filter
+    local s = set.new(1)
+    assert(s == s:filter(function() return true end))
+    s:add(2, 3, 4, 5, 6)
+    assert(s:filter(function(e) return e > 3 end) == set.new(4, 5, 6))
+    assert(s:filter(function(e) return false end):is_empty())
+end
+
 do -- __tostring
     do -- simple
         local s = set.new(1, 2, 3)
