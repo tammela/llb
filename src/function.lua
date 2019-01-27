@@ -52,68 +52,75 @@ end
 --
 -----------------------------------------------------
 
-local function filter(t, f)
-    local u = {}
-    for k, v in pairs(t) do
-        if f(v) then
-            u[k] = v
-        end
-    end
-    return u
-end
-
+-- 
+-- instructions = set<instruction>
+-- block_instructions[block] => {instruction}
+-- 
 local function map_instructions(bbgraph)
-    local instructions, aux = set.new(), {}
+    local instructions = set.new()
+    local block_instructions, auxmap = {}, {}
     for _, block in ipairs(bbgraph) do
+        block_instructions[block] = {}
         for _, reference in ipairs(block.ref:instructions()) do
             local instruction = {
                 block = block,
                 ref = reference,
                 usages = set.new(),
-                stores = set.new(),
+                stores = set.new()
             }
             instructions:add(instruction)
-            aux[reference:pointer()] = instruction
+            table.insert(block_instructions[block], instruction)
+            auxmap[reference:pointer()] = instruction
         end
     end
     for instruction in pairs(instructions) do
+        if instruction.ref:is_store() then
+            instruction.is_store = true
+            local operands = instruction.ref:operands()
+            local found = auxmap[operands[1]:pointer()]
+            instruction.value = found ~= nil and found or {ref = operands[1]}
+            instruction.alloca = assert(auxmap[operands[2]:pointer()])
+        elseif instruction.ref:is_alloca() then
+            instruction.is_alloca = true
+        end
         for _, usage in ipairs(instruction.ref:usages()) do
-            local usage_instruction = aux[usage]
+            -- FIXME: don't think this will work
+            local usage_instruction = auxmap[usage]
             instruction.usages:add(usage_instruction)
             if usage_instruction.ref:is_store() then
                 instruction.stores:add(usage_instruction)
             end
         end
     end
-    return instructions
+    return instructions, block_instructions
 end
 
 --
--- t[bb][tostring(alloca)] => {store instructions}
+-- returns t[block][alloca] => {store instructions}
 --
-local function bbstores(bbgraph)
+local function bbassignments(block_instructions)
     local t = {}
-    for _, bb in ipairs(bbgraph) do
-        t[bb] = {}
-        for _, store in ipairs(bb.ref:store_instructions()) do
-            local kalloca = tostring(store.alloca)
-            if t[bb][kalloca] == nil then
-                t[bb][kalloca] = {}
+    for block, instructions in pairs(block_instructions) do
+        t[block] = {}
+        for _, instruction in ipairs(instructions) do
+            if instruction.is_store then
+                if t[block][instruction.alloca] == nil then
+                    t[block][instruction.alloca] = {}
+                end
+                table.insert(t[block][instruction.alloca], instruction)
             end
-            table.insert(t[bb][kalloca], store)
         end
     end
     return t
 end
 
 --
--- returns f(bb, alloca)
--- f returns the store instruction that dominates bb for the alloca
+-- returns f(block, alloca)
+-- f returns the store instruction that dominates "block" for the alloca
 --
-local function bbdomstores(bbstores, idom)
+local function bbdomstores(bbassignments, idom)
     local t = {}
     return function(bb, alloca)
-        alloca = tostring(alloca.ref)
         if t[bb] == nil then
             t[bb] = {}
         end
@@ -123,8 +130,8 @@ local function bbdomstores(bbstores, idom)
         do
             local block = idom[bb]
             while block ~= nil do
-                if bbstores[block][alloca] ~= nil then
-                    t[bb][alloca] = bbstores[block][alloca]
+                if bbassignments[block][alloca] ~= nil then
+                    t[bb][alloca] = bbassignments[block][alloca]
                     goto done
                 end
                 block = idom[block]
@@ -137,25 +144,71 @@ end
 
 --
 -- replaces locally restricted store instructions
--- removes the replaced store instructions from bbstores
+-- removes the load instructions associated with each replaced store instruction
+-- removes the replaced store instructions from bbassignments
+-- changes bbassignments to t[block][alloca] => (store instruction) or nil
 --
-local function replace_stores_locally(bbgraph, bbstores)
-    for _, bb in ipairs(bbgraph) do
-        for kalloca, assigns in pairs(bbstores[bb]) do
-            while #assigns > 1 do
-                local current, next = assigns[1], assigns[2]
-                bb.ref:replace_between(
-                    current.reference,
-                    next.reference,
-                    current.value,
-                    current.alloca
+local function replace_assignments_locally(bbgraph, bbassignments)
+    for _, block in ipairs(bbgraph) do
+        for alloca, assignments in pairs(bbassignments[block]) do
+            while #assignments > 1 do
+                local current, next = assignments[1], assignments[2]
+                block.ref:replace_between(
+                    current.ref,
+                    next.ref,
+                    current.value.ref,
+                    current.alloca.ref
                 )
-                current.reference:delete()
-                table.remove(assigns, 1)
+                current.ref:delete()
+                table.remove(assignments, 1)
             end
-            bbstores[bb][kalloca] = bbstores[bb][kalloca][1]
+            bbassignments[block][alloca] = bbassignments[block][alloca][1]
         end
     end
+end
+
+-- 
+-- calculatesthe set of alloca instructions that need a phi for each block
+-- returns t[block] => set<alloca>
+-- 
+local function bbphis(bbgraph, allocas)
+    -- t[alloca] = set<block>
+    local t = {}
+    for alloca in pairs(allocas) do
+        -- if S is the set of nodes that store in the alloca
+        local S = alloca.stores:map(function(store) return store.block end)
+        -- DF+(S) is the set of nodes that need phi-functions for the alloca
+        t[alloca] = bbgraph:dfplus(S)
+    end
+
+    -- mirroring
+    local mirror = {}
+    for _, block in ipairs(bbgraph) do
+        mirror[block] = set.new()
+    end
+    for alloca, blocks in pairs(t) do
+        for block in pairs(blocks) do
+            mirror[block]:add(alloca)
+        end
+    end
+
+    return mirror
+end
+
+-- 
+-- TODO
+-- DFS from entry
+-- 
+local function dfs(t, entry)
+    local function tdfs(block, f, pre, post)
+        f(block)
+        for successor in pairs(t[block]) do
+            if pre ~= nil then pre(block, successor) end
+            tdfs(successor, f)
+            if post ~= nil then post(block, successor) end
+        end
+    end
+    return function(f, pre, post) tdfs(entry, f, pre, post) end
 end
 
 --
@@ -164,105 +217,66 @@ end
 --
 function fn:prunedssa(builder, bbgraph)
     local bbgraph = bbgraph or self:bbgraph()
-    local dom = bbgraph:dom() -- TODO: check if necessary later
-    local idom = bbgraph:idom(dom)
+    local idom = bbgraph:idom()
     local ridom = bbgraph:ridom(idom)
 
-    local instructions = map_instructions(bbgraph)
-    local bbstores = bbstores(bbgraph)
-    local bbdomstores = bbdomstores(bbstores, idom)
+    -- instructions = set<instruction>
+    -- block_instructions[block] => {instruction}
+    local instructions, block_instructions = map_instructions(bbgraph)
+    -- bbassignments[block][alloca] => {store instruction}
+    local bbassignments = bbassignments(block_instructions)
+    -- bbdomstores(block, alloca) => assignment
+    local bbdomstores = bbdomstores(bbassignments, idom)
 
-    replace_stores_locally(bbgraph, bbstores)
+    replace_assignments_locally(bbgraph, bbassignments)
 
-    -- allocas
-    local allocas = instructions:filter(function(e)
-        return e.ref:is_alloca()
-    end)
+    -- set of alloca instructions
+    local allocas = instructions:filter(function(e) return e.is_alloca end)
+    -- bbphis[block] => set<alloca>
+    local bbphis = bbphis(bbgraph, allocas)
+    -- ridomdfs(f, pre, post) from entry
+    local ridomdfs = dfs(ridom, bbgraph[1])
 
-    -- phiblocks[alloca] = set<block>
-    local phiblocks = {}
-    for alloca in pairs(allocas) do
-        -- if S is the set of nodes that store with the alloca
-        local S = alloca.stores:map(function(store) return store.block end)
-        -- DF+(S) is the set of nodes that need phi-functions for the alloca
-        phiblocks[alloca] = bbgraph:dfplus(S)
-    end
-
-    do -- phiblocks[block] = set<alloca>
-        local t = {}
-        for _, block in ipairs(bbgraph) do
-            t[block] = set.new()
-        end
-        for alloca, blocks in pairs(phiblocks) do
-            for block in pairs(blocks) do
-                t[block]:add(alloca)
-            end
-        end
-        phiblocks = t
-    end
-
-    -- ridom walking
-    local function ridomwalk(block, f)
-        f(block)
-        for successor in pairs(ridom[block]) do
-            ridomwalk(successor, f)
-        end
-    end
-
-    -- TODO
-    local function incoming(phiblock, alloca)
-        local t = {}
-        for predecessor in pairs(phiblock.predecessors) do
-            local last = bbstores[predecessor][tostring(alloca.ref)]
-            local store = last or bbdomstores(predecessor, alloca)
-            local incoming = {predecessor.ref}
-            if store ~= nil then
-                table.insert(incoming, 1, store.value)
-            end
-            table.insert(t, incoming)
-        end
-        return t
-    end
-
-    -- build phis
+    -- phis[block][alloca] => (phi instruction) or nil
     local phis = {}
-    ridomwalk(bbgraph[1], function(block)
-        local allocas = phiblocks[block]
-        -- if there are no phis to place in the current block
-        if allocas:is_empty() then
-            return
-        end
-        -- placing phis for each alloca
-        for alloca in pairs(allocas) do
-            local kalloca = tostring(alloca.ref)
+
+    -- places the required phi instructions for each block
+    -- removes the associated locally restricted load instructions
+    ridomdfs(function(block)
+        for alloca in pairs(bbphis[block]) do
             local phi = block.ref:build_phi(builder, alloca.ref)
-            phis[tostring(block.ref) .. kalloca] = phi
-            local a2
-            if bbstores[block][kalloca] ~= nil then
-                a2 = bbstores[block][kalloca]
+            if phis[block] == nil then phis[block] = {} end
+            phis[block][alloca] = phi
+            local boundary
+            if bbassignments[block][alloca] ~= nil then
+                -- there is a store instruction in the block
+                boundary = bbassignments[block][alloca]
             else
-                a2 = phi
-                bbstores[block][kalloca] = {
-                    reference = phi,
-                    value = phi,
-                    alloca = alloca
-                }
+                -- there isn't a store instruction in the block
+                -- bbassignments must be updated
+                boundary = phi
+                local phi_instruction = {ref = phi, alloca = alloca}
+                phi_instruction.value = phi_instruction
+                bbassignments[block][alloca] = phi_instruction
             end
-            block.ref:replace_between(phi, a2, phi, alloca.ref)
+            block.ref:replace_between(phi, boundary, phi, alloca.ref)
         end
     end)
 
-    -- add incoming
-    ridomwalk(bbgraph[1], function(block)
-        local allocas = phiblocks[block]
-        -- if no phis were to placed in the current block
-        if allocas:is_empty() then
-            return
-        end
-        -- add each incoming
-        for alloca in pairs(allocas) do
-            local phi = phis[tostring(block.ref) .. tostring(alloca.ref)]
-            phi:add_incoming(alloca.ref, incoming(block, alloca))
+    -- adds the incoming (value, block) tuples to the phi instructions 
+    ridomdfs(function(block)
+        for alloca in pairs(bbphis[block]) do
+            local t = {}
+            for predecessor in pairs(block.predecessors) do
+                local last = bbassignments[predecessor][alloca]
+                local assignment = last or bbdomstores(predecessor, alloca)
+                local incoming = {predecessor.ref}
+                if assignment ~= nil then
+                    table.insert(incoming, 1, assignment.value.ref)
+                end
+                table.insert(t, incoming)
+            end
+            phis[block][alloca]:add_incoming(alloca.ref, t)
         end
     end)
 
@@ -271,11 +285,11 @@ function fn:prunedssa(builder, bbgraph)
     local function todo(block)
         for alloca in pairs(allocas) do
             local previous = previous_map[alloca]
-            local current = bbstores[block][tostring(alloca.ref)]
+            local current = bbassignments[block][tostring(alloca.ref)]
             local a1, a2, value
             if previous == nil and current ~= nil then
                 -- replace [current, END] with current.value
-                a1 = current.reference
+                a1 = current.ref
                 a2 = block.ref:last_instruction()
                 value = current.value
                 block.ref:replace_between(a1, a2, value, alloca.ref)
@@ -290,11 +304,11 @@ function fn:prunedssa(builder, bbgraph)
             elseif previous ~= nil and current ~= nil then
                 -- replace [START, current] with previous.value
                 a1 = block.ref:first_instruction()
-                a2 = current.reference
+                a2 = current.ref
                 value = previous.value
                 block.ref:replace_between(a1, a2, value, alloca.ref) 
                 -- replace [current, END] with current.value
-                a1 = current.reference
+                a1 = current.ref
                 a2 = block.ref:last_instruction()
                 value = current.value
                 block.ref:replace_between(a1, a2, value, alloca.ref)
@@ -302,7 +316,6 @@ function fn:prunedssa(builder, bbgraph)
                 previous_map[alloca] = current
             end
         end
-
         for successor in pairs(ridom[block]) do
             local temp = tablecopy(previous_map)
             todo(successor)
@@ -311,18 +324,18 @@ function fn:prunedssa(builder, bbgraph)
     end
     todo(bbgraph[1])
 
-    -- delete stores
-    -- TODO: this is wrong, what about malloca stores?
-    for _, block in ipairs(bbgraph) do
-        for _, store in ipairs(block.ref:store_instructions()) do
-            store.reference:delete()
-        end
-    end
+    -- -- delete stores
+    -- -- TODO: this is wrong, what about malloca stores?
+    -- local stores = instructions:filter(function(e) return e.is_store end)
+    -- for store in pairs(stores) do
+    --     store.ref:delete()
+    -- end
 
-    -- delete allocas
-    for alloca in pairs(allocas) do
-        alloca.ref:delete()
-    end
+    -- TODO
+    -- -- delete allocas
+    -- for alloca in pairs(allocas) do
+    --     alloca.ref:delete()
+    -- end
 end
 
 return fn
