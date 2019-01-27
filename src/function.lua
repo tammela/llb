@@ -200,15 +200,22 @@ end
 -- DFS from entry
 -- 
 local function dfs(t, entry)
-    local function tdfs(block, f, pre, post)
-        f(block)
+    local function tdfs(block, before, after, pre, post)
+        if before ~= nil then
+            before(block)
+        end
         for successor in pairs(t[block]) do
-            if pre ~= nil then pre(block, successor) end
-            tdfs(successor, f)
-            if post ~= nil then post(block, successor) end
+            local pre = pre == nil or pre()
+            tdfs(successor, before, after)
+            if post ~= nil then post(pre) end
+        end
+        if after ~= nil then
+            after(block)
         end
     end
-    return function(f, pre, post) tdfs(entry, f, pre, post) end
+    return function(before, after, pre, post)
+        tdfs(entry, before, after, pre, post)
+    end
 end
 
 --
@@ -280,18 +287,21 @@ function fn:prunedssa(builder, bbgraph)
         end
     end)
 
-    -- replace last loads
-    local previous_map = {} -- previous_map[alloca] = assignment
-    local function todo(block)
+    -- auxiliary map
+    -- previous_map[alloca] => assignment
+    local previous_map = {}
+
+    -- replaces the remaining assignments and loads between blocks
+    ridomdfs(function(block) -- before
         for alloca in pairs(allocas) do
             local previous = previous_map[alloca]
-            local current = bbassignments[block][tostring(alloca.ref)]
+            local current = bbassignments[block][alloca]
             local a1, a2, value
             if previous == nil and current ~= nil then
                 -- replace [current, END] with current.value
                 a1 = current.ref
                 a2 = block.ref:last_instruction()
-                value = current.value
+                value = current.value.ref
                 block.ref:replace_between(a1, a2, value, alloca.ref)
                 -- previous = current
                 previous_map[alloca] = current
@@ -299,43 +309,39 @@ function fn:prunedssa(builder, bbgraph)
                 -- replace [START, END] with previous.value
                 a1 = block.ref:first_instruction()
                 a2 = block.ref:last_instruction()
-                value = previous.value
+                value = previous.value.ref
                 block.ref:replace_between(a1, a2, value, alloca.ref)
             elseif previous ~= nil and current ~= nil then
                 -- replace [START, current] with previous.value
                 a1 = block.ref:first_instruction()
                 a2 = current.ref
-                value = previous.value
+                value = previous.value.ref
                 block.ref:replace_between(a1, a2, value, alloca.ref) 
                 -- replace [current, END] with current.value
                 a1 = current.ref
                 a2 = block.ref:last_instruction()
-                value = current.value
+                value = current.value.ref
                 block.ref:replace_between(a1, a2, value, alloca.ref)
                 -- previous = current
                 previous_map[alloca] = current
             end
         end
-        for successor in pairs(ridom[block]) do
-            local temp = tablecopy(previous_map)
-            todo(successor)
-            previous_map = temp
+    end, function(block) -- after
+        for _, assignment in pairs(bbassignments[block]) do
+            if assignment.is_store then
+                assignment.ref:delete()
+            end
         end
+    end, function() -- pre
+        return tablecopy(previous_map)
+    end, function(pre) --post
+        previous_map = pre
+    end)
+
+    -- delete allocas
+    for alloca in pairs(allocas) do
+        alloca.ref:delete()
     end
-    todo(bbgraph[1])
-
-    -- -- delete stores
-    -- -- TODO: this is wrong, what about malloca stores?
-    -- local stores = instructions:filter(function(e) return e.is_store end)
-    -- for store in pairs(stores) do
-    --     store.ref:delete()
-    -- end
-
-    -- TODO
-    -- -- delete allocas
-    -- for alloca in pairs(allocas) do
-    --     alloca.ref:delete()
-    -- end
 end
 
 return fn
