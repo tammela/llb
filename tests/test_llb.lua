@@ -19,16 +19,16 @@
 --
 
 local testing = require "testing"
-local llb = require "llb"
 
 testing.header("llb.lua")
+
+local llb = require "llb"
 
 local err = {
     nonexisting_file = "No such file or directory",
     invalid_ir_file = "aux/invalid.ll:1:1: error: " ..
         "expected top-level entity\ninvalid_ir\n^\n",
     invalid_bc_file = "Invalid bitcode signature"
-
 }
 for k, v in pairs(err) do err[k] = "[LLVM] " .. v end
 

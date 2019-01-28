@@ -87,56 +87,26 @@ int bb_instructions(lua_State* L) {
     return 1;
 }
 
-// TODO
+// ==================================================
+//
+// gets the first instruction of a basic block
+//
+// ==================================================
 int bb_first_instruction(lua_State* L) {
     LLVMBasicBlockRef bb = getbasicblock(L, 1);
     LLVMValueRef first = LLVMGetFirstInstruction(bb);
     return instruction_new(L, first);
 }
 
-// TODO
+// ==================================================
+//
+// gets the last instruction of a basic block
+//
+// ==================================================
 int bb_last_instruction(lua_State* L) {
     LLVMBasicBlockRef bb = getbasicblock(L, 1);
     LLVMValueRef last = LLVMGetLastInstruction(bb);
     return instruction_new(L, last);
-}
-
-// ==================================================
-//
-// __tostring metamethod
-//
-// ==================================================
-int bb_tostring(lua_State* L) {
-    LLVMBasicBlockRef bb = getbasicblock(L, 1);
-    lua_pushstring(L, LLVMGetBasicBlockName(bb));
-    return 1;
-}
-
-// ==================================================
-//
-// TODO
-//
-// ==================================================
-
-// creates an array with all the store instructions within a basic block
-int bb_store_instructions(lua_State* L) {
-    LLVMBasicBlockRef bb = getbasicblock(L, 1);
-    lua_newtable(L);
-    LLVMValueRef instruction = LLVMGetFirstInstruction(bb);
-    while (instruction) {
-        if (LLVMIsAStoreInst(instruction)) {
-            lua_newtable(L);
-            instruction_new(L, instruction);
-            lua_setfield(L, -2, "reference");
-            instruction_new(L, LLVMGetOperand(instruction, 0));
-            lua_setfield(L, -2, "value");
-            instruction_new(L, LLVMGetOperand(instruction, 1));
-            lua_setfield(L, -2, "alloca");
-            lua_seti(L, -2, luaL_len(L, -2) + 1);
-        }
-        instruction = LLVMGetNextInstruction(instruction);
-    }
-    return 1;
 }
 
 // ==================================================
@@ -160,7 +130,6 @@ int bb_build_phi(lua_State* L) {
 // the replacement procedure is bounded between a1 and a2.
 //
 // ==================================================
-// TODO: rename this function
 int bb_replace_between(lua_State* L) {
     LLVMValueRef a1 /* current "assign" instruction */ = getinstruction(L, 2);
     LLVMValueRef a2 /* next "assign" instruction    */ = getinstruction(L, 3);
@@ -181,29 +150,11 @@ int bb_replace_between(lua_State* L) {
 
 // ==================================================
 //
-// replaces all uses of load, with alloca operands, to value.
-// the replacemente procedure is not bounded.
+// __tostring metamethod
 //
 // ==================================================
-// TODO: rename this function
-int bb_replace_loads(lua_State* L) {
-    LLVMBasicBlockRef block = getbasicblock(L, 1);
-    LLVMValueRef alloca = getinstruction(L, 2);
-    LLVMValueRef value = getinstruction(L, 3);
-
-    LLVMValueRef instruction = LLVMGetFirstInstruction(block);
-    while (instruction) {
-        LLVMValueRef next = LLVMGetNextInstruction(instruction);
-        if (LLVMIsALoadInst(instruction) &&
-            LLVMGetOperand(instruction, 0) == alloca) {
-            // TODO: Remove below
-            LLVMDumpValue(instruction);
-            printf("\n");
-
-            LLVMReplaceAllUsesWith(instruction, value);
-            LLVMInstructionEraseFromParent(instruction);
-        }
-        instruction = next;
-    }
-    return 0;
+int bb_tostring(lua_State* L) {
+    LLVMBasicBlockRef bb = getbasicblock(L, 1);
+    lua_pushstring(L, LLVMGetBasicBlockName(bb));
+    return 1;
 }

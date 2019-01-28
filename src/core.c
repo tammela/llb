@@ -27,7 +27,6 @@
 #include <llvm-c/IRReader.h>
 
 #include "bb.h"
-#include "builder.h"
 #include "core.h"
 #include "function.h"
 #include "instruction.h"
@@ -145,39 +144,28 @@ struct luaL_Reg bb_mt[] = {
     {"instructions", bb_instructions},
     {"first_instruction", bb_first_instruction},
     {"last_instruction", bb_last_instruction},
-    {"__tostring", bb_tostring},
-    // TODO: WIP
-    {"store_instructions", bb_store_instructions},
     {"build_phi", bb_build_phi},
     {"replace_between", bb_replace_between},
-    {"replace_loads", bb_replace_loads},
+    {"__tostring", bb_tostring},
     {NULL, NULL}
 };
 
 struct luaL_Reg inst_mt[] = {
-    {"label", instruction_label},
     {"pointer", instruction_pointer},
     {"operands", instruction_operands},
     {"usages", instruction_usages},
     {"is_alloca", instruction_is_alloca},
-    {"is_phi", instruction_is_phi},
     {"is_store", instruction_is_store},
-    {"is_load", instruction_is_load},
-    {"replace_with", instruction_replace_with},
     {"delete", instruction_delete},
-    {"__eq", instruction_equals},
-    {"__tostring", instruction_tostring},
-    // TODO
     {"add_incoming", instruction_add_incoming},
+    {"__tostring", instruction_tostring},
     {NULL, NULL}
 };
 
 struct luaL_Reg builder_mt[] = {
-    {"prune_alloca", builder_prune_alloca},
-    {"position_builder", builder_position_builder},
-    {"build_phi", builder_build_phi},
     {NULL, NULL}
 };
+
 // clang-format on
 
 // ==================================================

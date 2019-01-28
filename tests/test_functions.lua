@@ -47,7 +47,7 @@ do -- bbgraph
 end
 
 do -- prunedssa
-    local builder = getmetatable(module).get_builder(module) -- FIXME
+    local builder = llb.get_builder(module)
     assert(builder)
     local bbgraph = main:bbgraph()
     main:prunedssa(builder, bbgraph)

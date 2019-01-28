@@ -51,17 +51,6 @@ int instruction_pointer(lua_State* L) {
 
 // ==================================================
 //
-// returns the instruction label
-//
-// ==================================================
-int instruction_label(lua_State* L) {
-    LLVMValueRef instruction = getinstruction(L, 1);
-    lua_pushstring(L, LLVMGetValueName(instruction));
-    return 1;
-}
-
-// ==================================================
-//
 // creates a table with all the operands of a instruction
 //
 // ==================================================
@@ -101,33 +90,9 @@ int instruction_is_alloca(lua_State* L) {
     return 1;
 }
 
-int instruction_is_phi(lua_State* L) {
-    LLVMValueRef instruction = getinstruction(L, 1);
-    lua_pushboolean(L, LLVMIsAPHINode(instruction) ? 1 : 0);
-    return 1;
-}
-
 int instruction_is_store(lua_State* L) {
     LLVMValueRef instruction = getinstruction(L, 1);
     lua_pushboolean(L, LLVMIsAStoreInst(instruction) ? 1 : 0);
-    return 1;
-}
-
-int instruction_is_load(lua_State* L) {
-    LLVMValueRef instruction = getinstruction(L, 1);
-    lua_pushboolean(L, LLVMIsALoadInst(instruction) ? 1 : 0);
-    return 1;
-}
-
-// ==================================================
-//
-// replace a instruction
-//
-// ==================================================
-int instruction_replace_with(lua_State* L) {
-    LLVMValueRef old = getinstruction(L, 1);
-    LLVMValueRef new = getinstruction(L, 2);
-    LLVMReplaceAllUsesWith(old, new);
     return 1;
 }
 
@@ -139,31 +104,6 @@ int instruction_replace_with(lua_State* L) {
 int instruction_delete(lua_State* L) {
     LLVMValueRef instruction = getinstruction(L, 1);
     LLVMInstructionEraseFromParent(instruction);
-    return 1;
-}
-
-// ==================================================
-//
-// check if the reference of two instructions are the same
-//
-// ==================================================
-int instruction_equals(lua_State* L) {
-    LLVMValueRef i1 = getinstruction(L, 1);
-    LLVMValueRef i2 = getinstruction(L, 2);
-    lua_pushboolean(L, i1 == i2 ? 1 : 0);
-    return 1;
-}
-
-// ==================================================
-//
-// __tostring metamethod
-//
-// ==================================================
-int instruction_tostring(lua_State* L) {
-    LLVMValueRef instruction = getinstruction(L, 1);
-    char* str = LLVMPrintValueToString(instruction);
-    lua_pushstring(L, str);
-    LLVMDisposeMessage(str);
     return 1;
 }
 
@@ -206,4 +146,17 @@ int instruction_add_incoming(lua_State* L) {
 
     LLVMAddIncoming(phi, incoming_values, incoming_blocks, size);
     return 0;
+}
+
+// ==================================================
+//
+// __tostring metamethod
+//
+// ==================================================
+int instruction_tostring(lua_State* L) {
+    LLVMValueRef instruction = getinstruction(L, 1);
+    char* str = LLVMPrintValueToString(instruction);
+    lua_pushstring(L, str);
+    LLVMDisposeMessage(str);
+    return 1;
 }
