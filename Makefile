@@ -44,6 +44,7 @@ format:
 clean:
 	$(RM) -r ./bin
 	cd src && $(MAKE) $@
+	cd tests && $(MAKE) $@
 
 # list targets that do not create files (but not all makes understand .PHONY)
 .PHONY: all $(PLATS) none test format clean

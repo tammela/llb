@@ -169,7 +169,7 @@ int instruction_tostring(lua_State* L) {
 
 // ==================================================
 //
-//  TODO
+//  add incoming tuples to phi instruction
 //
 // ==================================================
 int instruction_add_incoming(lua_State* L) {

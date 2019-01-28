@@ -18,10 +18,15 @@
 -- along with llb. If not, see <http://www.gnu.org/licenses/>.
 --
 
-local instruction = {}
+local testing = require "testing"
+local llb = require "llb"
 
---
--- TODO
---
+testing.header("module.h")
 
-return instruction
+-- new
+-- dispose
+-- pairs
+-- index
+-- tostring
+
+testing.ok()

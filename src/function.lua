@@ -23,7 +23,7 @@ local bbgraph = require "bbgraph"
 
 local fn = {}
 
--- TODO
+-- auxiliary
 function tablecopy(a)
     local b = {}
     for k, v in pairs(a) do
@@ -53,10 +53,11 @@ end
 -----------------------------------------------------
 
 -- 
+-- returns instructions, block_instructions 
 -- instructions = set<instruction>
 -- block_instructions[block] => {instruction}
 -- 
-local function map_instructions(bbgraph)
+local function mapinstructions(bbgraph)
     local instructions = set.new()
     local block_instructions, auxmap = {}, {}
     for _, block in ipairs(bbgraph) do
@@ -65,7 +66,6 @@ local function map_instructions(bbgraph)
             local instruction = {
                 block = block,
                 ref = reference,
-                usages = set.new(),
                 stores = set.new()
             }
             instructions:add(instruction)
@@ -84,9 +84,7 @@ local function map_instructions(bbgraph)
             instruction.is_alloca = true
         end
         for _, usage in ipairs(instruction.ref:usages()) do
-            -- FIXME: don't think this will work
             local usage_instruction = auxmap[usage]
-            instruction.usages:add(usage_instruction)
             if usage_instruction.ref:is_store() then
                 instruction.stores:add(usage_instruction)
             end
@@ -116,9 +114,9 @@ end
 
 --
 -- returns f(block, alloca)
--- f returns the store instruction that dominates "block" for the alloca
+-- f returns the assignment instruction that dominates "block" for the alloca
 --
-local function bbdomstores(bbassignments, idom)
+local function bbdomassignments(bbassignments, idom)
     local t = {}
     return function(bb, alloca)
         if t[bb] == nil then
@@ -139,31 +137,6 @@ local function bbdomstores(bbassignments, idom)
         end
         ::done::
         return t[bb][alloca]
-    end
-end
-
---
--- replaces locally restricted store instructions
--- removes the load instructions associated with each replaced store instruction
--- removes the replaced store instructions from bbassignments
--- changes bbassignments to t[block][alloca] => (store instruction) or nil
---
-local function replace_assignments_locally(bbgraph, bbassignments)
-    for _, block in ipairs(bbgraph) do
-        for alloca, assignments in pairs(bbassignments[block]) do
-            while #assignments > 1 do
-                local current, next = assignments[1], assignments[2]
-                block.ref:replace_between(
-                    current.ref,
-                    next.ref,
-                    current.value.ref,
-                    current.alloca.ref
-                )
-                current.ref:delete()
-                table.remove(assignments, 1)
-            end
-            bbassignments[block][alloca] = bbassignments[block][alloca][1]
-        end
     end
 end
 
@@ -196,7 +169,6 @@ local function bbphis(bbgraph, allocas)
 end
 
 -- 
--- TODO
 -- DFS from entry
 -- 
 local function dfs(t, entry)
@@ -219,8 +191,7 @@ local function dfs(t, entry)
 end
 
 --
--- puts the IR in pruned SSA form
--- removes and replaces useless alloca/store/load instructions
+-- transforms the IR to its pruned SSA form
 --
 function fn:prunedssa(builder, bbgraph)
     local bbgraph = bbgraph or self:bbgraph()
@@ -229,13 +200,32 @@ function fn:prunedssa(builder, bbgraph)
 
     -- instructions = set<instruction>
     -- block_instructions[block] => {instruction}
-    local instructions, block_instructions = map_instructions(bbgraph)
+    local instructions, block_instructions = mapinstructions(bbgraph)
     -- bbassignments[block][alloca] => {store instruction}
     local bbassignments = bbassignments(block_instructions)
-    -- bbdomstores(block, alloca) => assignment
-    local bbdomstores = bbdomstores(bbassignments, idom)
+    -- bbdomassignments(block, alloca) => assignment
+    local bbdomassignments = bbdomassignments(bbassignments, idom)
 
-    replace_assignments_locally(bbgraph, bbassignments)
+    -- replaces locally restricted store instructions
+    -- removes locally restricted load instructions
+    -- removes the replaced store instructions from bbassignments
+    -- changes bbassignments to t[block][alloca] => (store instruction) or nil
+    for _, block in ipairs(bbgraph) do
+        for alloca, assignments in pairs(bbassignments[block]) do
+            while #assignments > 1 do
+                local current, next = assignments[1], assignments[2]
+                block.ref:replace_between(
+                    current.ref,
+                    next.ref,
+                    current.value.ref,
+                    current.alloca.ref
+                )
+                current.ref:delete()
+                table.remove(assignments, 1)
+            end
+            bbassignments[block][alloca] = bbassignments[block][alloca][1]
+        end
+    end
 
     -- set of alloca instructions
     local allocas = instructions:filter(function(e) return e.is_alloca end)
@@ -276,7 +266,7 @@ function fn:prunedssa(builder, bbgraph)
             local t = {}
             for predecessor in pairs(block.predecessors) do
                 local last = bbassignments[predecessor][alloca]
-                local assignment = last or bbdomstores(predecessor, alloca)
+                local assignment = last or bbdomassignments(predecessor, alloca)
                 local incoming = {predecessor.ref}
                 if assignment ~= nil then
                     table.insert(incoming, 1, assignment.value.ref)
@@ -297,12 +287,15 @@ function fn:prunedssa(builder, bbgraph)
             local previous = previous_map[alloca]
             local current = bbassignments[block][alloca]
             local a1, a2, value
+            local function replace()
+                block.ref:replace_between(a1, a2, value, alloca.ref)
+            end
             if previous == nil and current ~= nil then
                 -- replace [current, END] with current.value
                 a1 = current.ref
                 a2 = block.ref:last_instruction()
                 value = current.value.ref
-                block.ref:replace_between(a1, a2, value, alloca.ref)
+                replace()
                 -- previous = current
                 previous_map[alloca] = current
             elseif previous ~= nil and current == nil then
@@ -310,18 +303,18 @@ function fn:prunedssa(builder, bbgraph)
                 a1 = block.ref:first_instruction()
                 a2 = block.ref:last_instruction()
                 value = previous.value.ref
-                block.ref:replace_between(a1, a2, value, alloca.ref)
+                replace()
             elseif previous ~= nil and current ~= nil then
                 -- replace [START, current] with previous.value
                 a1 = block.ref:first_instruction()
                 a2 = current.ref
                 value = previous.value.ref
-                block.ref:replace_between(a1, a2, value, alloca.ref) 
+                replace()
                 -- replace [current, END] with current.value
                 a1 = current.ref
                 a2 = block.ref:last_instruction()
                 value = current.value.ref
-                block.ref:replace_between(a1, a2, value, alloca.ref)
+                replace()
                 -- previous = current
                 previous_map[alloca] = current
             end
@@ -338,10 +331,8 @@ function fn:prunedssa(builder, bbgraph)
         previous_map = pre
     end)
 
-    -- delete allocas
-    for alloca in pairs(allocas) do
-        alloca.ref:delete()
-    end
+    -- deletes all alloca instructions
+    allocas:map(function(e) e.ref:delete() end)
 end
 
 return fn

@@ -18,9 +18,10 @@
 -- along with llb. If not, see <http://www.gnu.org/licenses/>.
 --
 
-require "setup"
+local testing = require "testing"
+local llb = require "llb"
 
-local lib = require "llb"
+testing.header("llb.lua")
 
 local err = {
     nonexisting_file = "No such file or directory",
@@ -35,9 +36,9 @@ local tests = {{
     func = "load_ir",
     cases = {{
         name = "ok",
-        arguments = {"aux/sum.ll"},
+        arguments = {"aux/book.ll"},
         res = function(got)
-            return type(got) == "table", "a table", type(got)
+            return type(got) == "userdata", "userdata", type(got)
         end,
         err = nil
     }, {
@@ -53,9 +54,9 @@ local tests = {{
     func = "load_bitcode",
     cases = {{
         name = "ok",
-        arguments = {"aux/sum.bc"},
+        arguments = {"aux/book.bc"},
         res = function(got)
-            return type(got) == "table", "a table", type(got)
+            return type(got) == "userdata", "userdata", type(got)
         end,
         err = nil
     }, {
@@ -84,8 +85,10 @@ end
 
 for i, test in ipairs(tests) do
     for j, case in ipairs(test.cases) do
-        local res, err = lib[test.func](table.unpack(case.arguments))
+        local res, err = llb[test.func](table.unpack(case.arguments))
         check(test, case, case.res, res)
         check(test, case, case.err, err)
     end
 end
+
+testing.ok()

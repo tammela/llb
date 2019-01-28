@@ -27,7 +27,7 @@ do
     llb.newclass({}, "module")
     llb.newclass(require("function"), "function")
     llb.newclass({}, "basicblock")
-    llb.newclass(require("instruction"), "instruction")
+    llb.newclass({}, "instruction")
     llb.newclass({}, "builder")
 end
 

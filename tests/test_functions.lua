@@ -46,34 +46,12 @@ do -- bbgraph
     -- complete test in test_bbgraph.lua
 end
 
--- do -- map_instructions
---     local instructions = main:map_instructions()
---     for k, v in pairs(instructions) do
---         print(k, v)
---     end
---     print(instructions)
--- end
-
 do -- prunedssa
-    local builder = getmetatable(module).get_builder(module)
+    local builder = getmetatable(module).get_builder(module) -- FIXME
     assert(builder)
     local bbgraph = main:bbgraph()
     main:prunedssa(builder, bbgraph)
     llb.write_bitcode(module, "testando.bc")
 end
-
--- -- TODO: move
--- do -- bb:store_instructions
---     local bbgraph = main:bbgraph()
---     for _, bb in ipairs(bbgraph) do
---         print(bb.ref)
---         for i, store in ipairs(bb.ref:store_instructions()) do
---             print("---", i)
---             print(store.reference)
---             print(store.value)
---             print(store.alloca)
---         end
---     end
--- end
 
 testing.ok()
