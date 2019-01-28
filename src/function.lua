@@ -287,15 +287,12 @@ function fn:prunedssa(builder, bbgraph)
             local previous = previous_map[alloca]
             local current = bbassignments[block][alloca]
             local a1, a2, value
-            local function replace()
-                block.ref:replace_between(a1, a2, value, alloca.ref)
-            end
             if previous == nil and current ~= nil then
                 -- replace [current, END] with current.value
                 a1 = current.ref
                 a2 = block.ref:last_instruction()
                 value = current.value.ref
-                replace()
+                block.ref:replace_between(a1, a2, value, alloca.ref)
                 -- previous = current
                 previous_map[alloca] = current
             elseif previous ~= nil and current == nil then
@@ -303,18 +300,18 @@ function fn:prunedssa(builder, bbgraph)
                 a1 = block.ref:first_instruction()
                 a2 = block.ref:last_instruction()
                 value = previous.value.ref
-                replace()
+                block.ref:replace_between(a1, a2, value, alloca.ref)
             elseif previous ~= nil and current ~= nil then
                 -- replace [START, current] with previous.value
                 a1 = block.ref:first_instruction()
                 a2 = current.ref
                 value = previous.value.ref
-                replace()
+                block.ref:replace_between(a1, a2, value, alloca.ref)
                 -- replace [current, END] with current.value
                 a1 = current.ref
                 a2 = block.ref:last_instruction()
                 value = current.value.ref
-                replace()
+                block.ref:replace_between(a1, a2, value, alloca.ref)
                 -- previous = current
                 previous_map[alloca] = current
             end
